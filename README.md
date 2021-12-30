@@ -13,6 +13,7 @@ GitOps are not equal with these softwares only. You can use your favorite soluti
 
 Enviroment:
 
+- GitHub
 - Kubernetes with Kustomization
 
 Used softwares to reach the goal:
@@ -20,7 +21,7 @@ Used softwares to reach the goal:
 - FluxCD
 - Helm
 - Kustomize
-- Kubectx + kubens
+- kubectx + kubens
 - k9s
 
 The solution will work on this way.
@@ -54,11 +55,6 @@ Mandatory components:
   Official install guide: [https://github.com/ahmetb/kubectx](https://github.com/ahmetb/kubectx)
 - K9s (terminal GUI tool for Kubernetes)  
   Officail install guide: [https://k9scli.io/topics/install/](https://k9scli.io/topics/install/)   
-
-The installation will be done above:
-
-- Gitea server  
-  Official guide: [https://docs.gitea.io/en-us/install-with-docker/](https://docs.gitea.io/en-us/install-with-docker/)
 
 ## Pre-requisites verfication
 
@@ -155,32 +151,7 @@ Please check all of the command is available after the installation. If the vers
     flux version 0.24.1
     ```
 
-
-## Prepare git repository for the code
-
-### Create ssh keys (optional, if you already have)
-
-1. Generate SSH keys, if you don't have already yet
-
-    ```bash
-    ssh-keygen -b 4096 -t rsa -f ./sshkey -q -N ""
-    ```
-
-1. Add config lines to the SSH config on your device
-
-    ```bash
-    vi ~/.ssh/config
-    ```
-
-    Add this content to the file
-
-    ```bash
-    Host gitea.local
-      StrictHostKeyChecking no
-      UserKnownHostsFile=/dev/null
-    ```
-
-### Clone the git repo to your machine
+## Clone this git repo to your machine (optional)
 
 1. Create a `git` folder in your home directory
 
@@ -191,78 +162,12 @@ Please check all of the command is available after the installation. If the vers
 1. Clone this repo to your machine
 
     ```bash
-    git clone <repo url>
+    git clone https://github.com/<your username>/gitops-demo.git
     ```
 1. Enter the cloned code
 
     ```bash
     cd gitops-demo
-    ```
-
-### Install Gitea
-
-1. Install gitea  
-   You will find a docker-compose.yml file in this directory and just run the follwing command:  
-
-    ```bash
-    docker-compose up -d
-    ```
-
-1. Configure Gitea via web browser
-
-   1. Open your Internet browser
-   1. Type [http://localhost:3080/](http://localhost:3080/)
-   1. The Gitea wizzard screen need to be appear
-   1. Scroll down to the "Adminstator account settings"
-
-        ![Gitea Initial settings](docs/images/gitea_admin account_creation.png)
-
-    1. Open the "Administrator account settings" and fill the form:
-
-        ```yaml
-        Username: gitea
-        Password: gitea
-        E-mail: admin@localhost.local
-        ```
-
-    1. Click on the `Install Gitea` button (above the form)
-
-### Configure your ssh key
-
-    1. Click on your profile in the top right side and choose the settings.
-    1. Choose in the top middle the `SSH / GPG keys`
-    1. Manage SSH keys right side click on the `Add keys` button
-    1. Show your SSH public key with the following command.
-        
-        ```bash
-        cat ./sshkey.pub
-        ```
-
-    1. Copy your SSH public key to the `content` text field.
-    1. The name will be automatially filled, or you can change if you like.
-    1. Click on the green `Add key` button.
-
-### Create your repository
-
-1. Click on top right on **`"+"`** icon and chhose the new repository
-1. Fill the repository name: `flux-demo`
-1. Go to the README section (scroll down)  
-   Check the checkbox before the text: `Initialize repository (Adds ..gitignore, License and README)`
-1. Click on `Create repository` button (bottom of the page)
-
-### Clone your repository to your device
-
-1. Open a terminal (command line)
-1. Clone the repository to your folder
-    
-    ```bash
-    git clone http://gitea.local:3080/gitea/flux-demo.git
-    ```
-
-1. Enter the direytory
-
-    ```bash
-    cd flux-demo
     ```
 
 ## Create a kubernetes cluster
@@ -308,6 +213,50 @@ Please check all of the command is available after the installation. If the vers
     ```bash
        ▪ Using image k8s.gcr.io/metrics-server/metrics-server:v0.4.2
     🌟  The 'metrics-server' addon is enabled
+    ```
+## Create a personal access token
+
+You need to create a personal access token on GitHub, because your password cannot be used with FluxCD later (and it will be not so safe)
+
+Official guide to access token creation: [https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+
+Feel free to define the token name. (example: fluxdemo)
+The repo and the user only enough for this token.
+
+## Flux preparation steps
+
+### Create your repository on GitHub
+
+1. Click on top right on **`"+"`** icon and chhose the new repository
+1. Fill the repository name: `flux-demo`
+1. Check the checkbox before the text: `Add a README file`
+1. Click on `Create repository` button (bottom of the page)
+
+### Clone your repository to your device
+
+1. Open a terminal (command line)
+1. Enter the `git` directory (if you are not there already)
+    ```bash
+    cd ~/git
+    ```
+
+1. Clone the repository to your folder
+    
+    Replace `"<your username>"` with your username
+
+    ```bash
+    git clone https://github.com/<your username>/flux-demo.git
+    ```
+
+1. Enter the direytory
+
+    ```bash
+    cd flux-demo
+    ```
+1. Create a new branch for test
+
+    ```bash
+    git checkout -b demo1
     ```
 
 ## Prepare FluxCD for first use
@@ -378,7 +327,7 @@ We are creating the Flux deployment for Kubernetes
     ```yaml
     apiVersion: v1
     kind: Namespace
-      metadata:
+    metadata:
       name: flux-ns
     ```
     
@@ -468,7 +417,7 @@ We are creating the Flux deployment for Kubernetes
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
-      metadata:
+    metadata:
       name: flux-crd
     rules:
     - apiGroups:
@@ -542,36 +491,110 @@ We are creating the Flux deployment for Kubernetes
     
     Save file with `:wq`
 
+1. Verify your files are correct and ready to deploy them
+
+    ```bash
+    kubectl apply -k flux-init/ --dry-run=client
+    ```
+
+    Sample output:
+
+    ```bash
+    namespace/flux-ns configured (dry run)
+    role.rbac.authorization.k8s.io/flux-role configured (dry run)
+    clusterrole.rbac.authorization.k8s.io/flux-crd configured (dry run)
+    rolebinding.rbac.authorization.k8s.io/flux-sa-rb configured (dry run)
+    clusterrolebinding.rbac.authorization.k8s.io/flux-crb configured (dry run)
+    ```
+
+1. Push your code to the GitHub
+
+    ```bash
+    git push -u origin demo1
+    ```
+
 ## Deploy FluxCD
 
-1. Deploy the FluxCD controllers on Kubernetes
+1. Deploy the FluxCD roles on Kubernetes
 
     ```bash
     kubectl apply -k flux-init/
     ```
-1. Bootstrap the flux
+1. Bootstrap the FluxCD
 
     Create a connection between the FluxCD and the Git repository via SSH. If you are using GitHub, Gitlab or Bitbucket please see the [FluxCD documentation bootstrap section](https://fluxcd.io/docs/cmd/flux_bootstrap/) about the possibilities.
 
     Some words about the parameters:
 
-    - SSH will be used for the communication
-    - SSH private key file path.
+    - HTTPS will be used for the communication
+    - Owner is your username every time
+    - Repository cover your repository name (`"flux-demo"`)
+    - Branch is your branch that you are already created above.
     - PATH will be define which environment is deployed here
+    - Private means your repo will configured as public (and not private)
+    - Personal define the owner is a user and not an organization
     - Namespace parameter is telling which namespace are prepaed to flux (basically it is optional in thiss case, because all of the config file contains the namespace configuration)
+    - Token auth parater force the token auth method to GitHub
 
-   ```bash
-    flux bootstrap git \
-      --url ssh://git@gitea.local:2222/gitea/flux-demo.git \
-      --private-key-file ./sshkey \
-      --path ./clusters/dev \
-      --namespace flux-ns
+    ```bash
+    flux bootstrap github \
+      --owner=<your github username> \
+      --repository=flux-demo \
+      --branch=demo1 \
+      --path=clusters/dev \
+      --private=false \
+      --personal=true \
+      --namespace=flux-ns \
+      --token-auth
     ```
 
-    Please answer **`"y"`**  to the question `Please give the key access to your repository: `
+    Please copy your access token after this message:
+
+    `Please enter your GitHub personal access token (PAT):`
 
     Sample command output:
 
     ```bash
-
+    ► connecting to github.com
+    ► cloning branch "demo1" from Git repository "https://github.com/<your username>/flux-demo.git"
+    ✔ cloned repository
+    ► generating component manifests
+    ✔ generated component manifests
+    ✔ committed sync manifests to "demo1" ("<your commit hash>")
+    ► pushing component manifests to "https://github.com/<your username>/flux-demo.git"
+    ✔ installed components
+    ✔ reconciled components
+    ► determining if source secret "flux-ns/flux-system" exists
+    ► generating source secret
+    ► applying source secret "flux-ns/flux-system"
+    ✔ reconciled source secret
+    ► generating sync manifests
+    ✔ generated sync manifests
+    ✔ committed sync manifests to "demo1" ("<git commit hash>")
+    ► pushing sync manifests to "https://github.com/<your username>/flux-demo.git"
+    ► applying sync manifests
+    ✔ reconciled sync configuration
+    ◎ waiting for Kustomization "flux-ns/flux-ns" to be reconciled
+    ✔ Kustomization reconciled successfully
+    ► confirming components are healthy
+    ✔ helm-controller: deployment ready
+    ✔ kustomize-controller: deployment ready
+    ✔ notification-controller: deployment ready
+    ✔ source-controller: deployment ready
+    ✔ all components are healthy
     ```
+1. We have a base FluxCD installation on Kubernetes.
+
+    You can able to check it with k9s  
+    (the k9s documentation are linked above)
+
+    or you can check it manually
+
+    ```bash
+    kubens flux-ns
+    kubenctl get pods
+    ```
+
+## Create our first deployment with FluxCD
+
+Soon.
