@@ -10,7 +10,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: flux-sa
-    namespace: nginx
+    namespace: flux-system
   - apiGroup: rbac.authorization.k8s.io
     kind: Group
     name: system:serviceaccounts
