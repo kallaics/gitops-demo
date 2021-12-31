@@ -270,10 +270,16 @@ Use this command to create the directory structure:
 Note: It will not work maybe on Windows.
 
 ```bash
-mkdir -p apps/{base,prod,stg,dev} clusters/{prod,stg,dev} infrastructure/{base,prod,stg,dev} flux-init/
+mkdir -p apps/{base,prod,stg,dev} \
+         clusters/{prod,stg,dev} \
+         infrastructure/{base,prod,stg,dev} \
+         infrastructure/base/sources \ 
+         flux-init/
 ```
 
 More information about the structure: [https://fluxcd.io/docs/guides/repository-structure/](https://fluxcd.io/docs/guides/repository-structure/)
+
+The `"sources"` directory will contains the Helm chart repository definitions. I assume we will use all of the sources in all environment. If you would like to separate it, maybe possible to create a `"sources"` directory inside of each environment specifc directory.
 
 Sample result of tree command:
 
@@ -286,7 +292,8 @@ Sample result of tree command:
 ├── clusters
 |   ├── prod
 |   ├── stg
-│   └── dev
+│   ├── dev
+|   └── sources
 ├── flux-init
 └── infrastructure
     ├── base
@@ -320,7 +327,7 @@ We are creating the Flux deployment for Kubernetes
     vi flux-init/namespace.yaml
     ```
 
-    Enable file edit with `insert` key or `:i`
+    Enable file edit with `insert` key or `i` key
 
     Add the following contect to the file
 
@@ -342,7 +349,7 @@ We are creating the Flux deployment for Kubernetes
     vi flux-init/role.yaml
     ```
 
-    Enable file edit with `insert` key or `:i`
+    Enable file edit with `insert` key or `i` key
 
     Add the following contect to the file
 
@@ -380,7 +387,7 @@ We are creating the Flux deployment for Kubernetes
     vi flux-init/role-binding.yaml
     ```
 
-    Enable file edit with `insert` key or `:i`
+    Enable file edit with `insert` key or `i` key
 
     Add the following contect to the file
 
@@ -410,7 +417,7 @@ We are creating the Flux deployment for Kubernetes
     vi flux-init/cluster-role.yaml
     ```
 
-    Enable file edit with `insert` key or `:i`
+    Enable file edit with `insert` key or `i` key
 
     Add the following contect to the file
 
@@ -418,7 +425,7 @@ We are creating the Flux deployment for Kubernetes
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
-      name: flux-crd
+      name: flux-cr
     rules:
     - apiGroups:
       - apiextensions.k8s.io
@@ -445,7 +452,7 @@ We are creating the Flux deployment for Kubernetes
     vi flux-init/cluster-role-binding.yaml
     ```
 
-    Enable file edit with `insert` key or `:i`
+    Enable file edit with `insert` key or `i` key
 
     Add the following contect to the file
 
@@ -457,7 +464,7 @@ We are creating the Flux deployment for Kubernetes
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: flux-crd
+      name: flux-cr
     subjects:
     - name: flux-sa
       namespace: flux-ns
@@ -474,7 +481,7 @@ We are creating the Flux deployment for Kubernetes
     vi flux-init/kustomization.yaml
     ```
 
-    Enable file edit with `insert` key or `:i`
+    Enable file edit with `insert` key or `i` key
 
     Add the following contect to the file
 
@@ -597,4 +604,110 @@ We are creating the Flux deployment for Kubernetes
 
 ## Create our first deployment with FluxCD
 
-Soon.
+We will create files, and those will describe our software resources (like a Helm chart repositories),application Helm charts, application configuration.
+
+### Nginx ingress controller
+
+Nginx controller will be deployed from Helm chart. In first step need to be defined the Helm repository, after we can prepare the configuration for the nginx-controller Helm Chart and last step to define the Helm release.
+
+Nginx ingress controller is an infrastructure related element and it will be serve our application ingresses. That is the reason, why we add it to the infrastructure directory instead of apps/base.
+| Function place | Path |
+|----------------|------|
+| Repository defintion | infrastructure/sources/ |  
+| Flux configuration   | cluster/`<env>`/ |
+| Configuration | apps/`<env>`/ |
+| Helm release configuration | apps/base/`<app name>`/ |
+| Infrastructure Helm relases | infrastructure/base/`<app name>`/ |
+
+1. Add Bitnami as Helm repository as source of the Helm charts.
+
+    ```bash
+    vi infrastructure/sources/bitnami.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: source.toolkit.fluxcd.io/v1beta1
+    kind: HelmRepository
+    metadata:
+      name: bitnami
+    spec:
+      interval: 30m
+      url: https://charts.bitnami.com/bitnami
+    ```
+
+    Save file with `:wq`
+
+1. Add Kustomization for sources.
+
+  If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
+
+    ```bash
+    vi infrastructure/sources/kustomization.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: flux-system
+    resources:
+    - bitnami.yaml
+    ```
+
+    Save file with `:wq`
+
+1. Add Kustomization for the `dev` environment.
+
+  If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
+
+    ```bash
+    vi infrastructure/kustomization.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: flux-system
+    resources:
+    - sources
+    ```
+
+    Save file with `:wq`
+
+1. Create `nginx-controller` directory in infrastructure
+
+  ```bash
+  mkdir infrastructure/apps/nginx-controller
+  ```
+
+1. Create namespace for Nginx ingress controller
+
+    Note: `ns` - Namespace
+
+    ```bash
+    vi infrastructure/apps/namespace.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: nginx-ns
+    ```
+    
+    Save file with `:wq`

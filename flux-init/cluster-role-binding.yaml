@@ -5,7 +5,7 @@ metadata:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: flux-crd
+  name: flux-cr
 subjects:
   - name: flux-sa
     namespace: flux-ns
