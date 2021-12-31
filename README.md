@@ -13,6 +13,7 @@
       - [Prepare Helm repository configuration](#prepare-helm-repository-configuration)
       - [Prepare configuration for deplyoment](#prepare-configuration-for-deplyoment)
       - [Deploy the configuration](#deploy-the-configuration)
+      - [Verify the deployment](#verify-the-deployment)
 
 It prepare for educational purpose about the GitOps methodology in the praktice.
 
@@ -818,6 +819,8 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
 1. Create Nginx Helm release
 
+    Helm chart values reference: [https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml)
+
     It will be configred the Helm to deploy the chart.
 
     ```bash
@@ -842,7 +845,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
             kind: HelmRepository
             name: bitnami
             namespace: flux-system
-      interval: 1h0m0s
+      interval: 0h5m0s
       install:
         remediation:
           retries: 3
@@ -915,3 +918,86 @@ git add .
 git commit -m "Add Nginx ingress controller"
 git push
 ```
+
+#### Verify the deployment
+
+You have a choice all of the kubernetes command can be apply in K9s as well. Be careful, the K9s not changing context or namespace in your terminal. It is just happen inside the software.
+
+If you have a kubectx and kubens command the next few step will be easier a bit. The original kubectl commans are also added to the documentation.
+
+1. Go to the terminal
+1. Configure the right Kubernetes context
+
+    ```bash
+    kubectx minikube
+    ```
+
+    or
+
+    ```bash
+    kubectl config use-context minikube
+    ```
+
+1. Get all namepaces
+
+    ```bash
+    kubectl get ns
+    ```
+
+    Sample result:
+    You have to focus to the
+
+    - `flux-system` - here hiding the FluxCD, it was created with the bootstrap command earlier
+    - `nginx` - here is our nginx ingress controller resources
+
+    ```bash
+    NAME              STATUS   AGE
+    default           Active   135m
+    flux-system       Active   132m
+    kube-node-lease   Active   135m
+    kube-public       Active   135m
+    kube-system       Active   135m
+    nginx             Active   120m
+    ```
+
+1. Check the ingress controller is working well
+
+    1. Expose the LoadBalancer IP (minikube works different then the normal Kubernetes)
+
+        Get the exisiting services in `nginx` namespace
+
+        ```bash
+        kubectl get svc -n nginx
+        ```
+
+        Sample output:
+
+        You will be see the `External-IP` is on `pending` state. If you are using minikibe, it is normal. You can get the right external access with `minikube` command. The port mappings ae in this list that will be shown at minikube command output.
+
+        ```bash
+        NAME                    TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
+        nginx                   LoadBalancer   10.100.54.208   <pending>     80:30308/TCP,443:32583/TCP   99m
+        nginx-default-backend   ClusterIP      10.100.217.54   <none>        80/TCP                       99m
+        ```
+
+        Get external IP with minikube
+
+        ```bash
+        minikube service nginx -n nginx --url
+        ```
+
+        Sample result:
+
+        ```bash
+        http://192.168.1.2:30308   # this is ponting to port 80 in Kubernete
+        http://192.168.1.2:32583   # this is pointing to port 443 in Kubenetes
+        ```
+
+        Next step to test the URL-s above with curl
+
+        ```bash
+        curl http://192.168.1.2:30308
+        curl http://192.168.1.2:30583
+        ```
+
+        You will be get HTTP error 404, that means our nginx ingress controller is working well, but no ingresses configured yet.
