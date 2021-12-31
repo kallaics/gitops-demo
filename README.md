@@ -1,6 +1,20 @@
 # GitOps example
 
-It prepare for educational purpose about the GitOps methodology in the praktice. 
+- [GitOps example](#gitops-example)
+  - [Description](#description)
+  - [Requirements](#requirements)
+  - [Requirements verfication](#requirements-verfication)
+  - [Create Flux code](#create-flux-code)
+    - [Introduction](#introduction)
+    - [Prepare configuration](#prepare-configuration)
+    - [Deploy FluxCD](#deploy-fluxcd)
+  - [App deployments with FluxCD](#app-deployments-with-fluxcd)
+    - [Nginx ingress controller](#nginx-ingress-controller)
+      - [Prepare Helm repository configuration](#prepare-helm-repository-configuration)
+      - [Prepare configuration for deplyoment](#prepare-configuration-for-deplyoment)
+      - [Deploy the configuration](#deploy-the-configuration)
+
+It prepare for educational purpose about the GitOps methodology in the praktice.
 
 ## Description
 
@@ -9,7 +23,7 @@ A little game to present a the GitOps.
 The plan to easy to understand and lean more about the GitOps.  
 This will show, how can anybody create a simple flow with a simple app. The goal is to create a simple web server with automated  deployment.
 
-GitOps are not equal with these softwares only. You can use your favorite solutions for git GitHub, Gitlab, BitBucket etc. You can use ArgoCD instead of FluxCD. So lot of different solution are on the internet to apply GitOps methodology on your system. In this current case we will use the Kubernetes as infrastructure. 
+GitOps are not equal with these softwares only. You can use your favorite solutions for git GitHub, Gitlab, BitBucket etc. You can use ArgoCD instead of FluxCD. So lot of different solution are on the internet to apply GitOps methodology on your system. In this current case we will use the Kubernetes as infrastructure.
 
 Enviroment:
 
@@ -28,7 +42,7 @@ The solution will work on this way.
 
 User send a git commit. FluxCD will be check it via the source controller` FluxCD component. If it has a new commit try to apply it on the system. The Kustomization supported by Kubernetes default. The Kustomize controller will update the configurtion on Kubernetes elements (Configmaps, Secrects, Deployments, Pods, Services etc.). The deployment with the new config will be done by Helm controller.
 
-I will be use the Flux word instead of the FluxCD in my documentation. Please keep in your mind. 
+I will be use the Flux word instead of the FluxCD in my documentation. Please keep in your mind.
 
 ## Requirements
 
@@ -54,9 +68,9 @@ Mandatory components:
 - Kubectx and kubens  
   Official install guide: [https://github.com/ahmetb/kubectx](https://github.com/ahmetb/kubectx)
 - K9s (terminal GUI tool for Kubernetes)  
-  Officail install guide: [https://k9scli.io/topics/install/](https://k9scli.io/topics/install/)   
+  Officail install guide: [https://k9scli.io/topics/install/](https://k9scli.io/topics/install/)
 
-## Pre-requisites verfication
+## Requirements verfication
 
 Please check all of the command is available after the installation. If the version numbers are different (newer, than the examples, it is okay.)
 
@@ -67,7 +81,7 @@ Please check all of the command is available after the installation. If the vers
     ```
 
     Sample command output:
-    
+
     ```bash
     git version 2.17.1
     ```
@@ -77,9 +91,9 @@ Please check all of the command is available after the installation. If the vers
     ```bash
     docker version
     ```
-    
+
     Sample command output:
-    
+
     ```bash
     Client: Docker Engine - Community
     Version:           20.10.12
@@ -116,9 +130,9 @@ Please check all of the command is available after the installation. If the vers
     ```bash
     docker-compose version
     ```
-    
+
     Sample command output:
-    
+
     ```bash
     docker-compose version 1.27.4, build 40524192
     docker-py version: 4.3.1
@@ -131,22 +145,22 @@ Please check all of the command is available after the installation. If the vers
    ```bash
     minikube version
     ```  
-    
+
     Sample command output:
-    
+
     ```bash
     minikube version: v1.24.0
     commit: 76b94fb3c4e8ac5062daf70d60cf03ddcc0a741b
     ```
 
-1. FluxCD CLI tool 
+1. FluxCD CLI tool
 
     ```bash
     flux --version
     ```
-    
+
     Sample command output:
-    
+
     ```bash
     flux version 0.24.1
     ```
@@ -164,6 +178,7 @@ Please check all of the command is available after the installation. If the vers
     ```bash
     git clone https://github.com/<your username>/gitops-demo.git
     ```
+
 1. Enter the cloned code
 
     ```bash
@@ -203,17 +218,20 @@ Please check all of the command is available after the installation. If the vers
     🌟  Enabled addons: default-storageclass, storage-provisioner
     🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
     ```
+
 1. Enable metrics for CPU and memory usage (optional)
 
     ```bash
     minikube addons enable metrics-server
     ```
+
     Sample output:
 
     ```bash
        ▪ Using image k8s.gcr.io/metrics-server/metrics-server:v0.4.2
     🌟  The 'metrics-server' addon is enabled
     ```
+
 ## Create a personal access token
 
 You need to create a personal access token on GitHub, because your password cannot be used with FluxCD later (and it will be not so safe)
@@ -236,12 +254,13 @@ The repo and the user only enough for this token.
 
 1. Open a terminal (command line)
 1. Enter the `git` directory (if you are not there already)
+
     ```bash
     cd ~/git
     ```
 
 1. Clone the repository to your folder
-    
+
     Replace `"<your username>"` with your username
 
     ```bash
@@ -253,6 +272,7 @@ The repo and the user only enough for this token.
     ```bash
     cd flux-demo
     ```
+
 1. Create a new branch for test
 
     ```bash
@@ -312,7 +332,7 @@ Hints for file exiting. It will be used **vi** and after every commands need to 
 
 If you prefer different editor feel free to use it.
 
-### Creation steps
+### Prepare configuration
 
 All of the command need to run inthe git repo folder.  
 Default: ~/.git/flux-demo
@@ -320,8 +340,6 @@ Default: ~/.git/flux-demo
 We are creating the Flux deployment for Kubernetes
 
 1. Create namespace configuration file
-
-    Note: `ns` - Namespace
 
     ```bash
     vi flux-init/namespace.yaml
@@ -337,13 +355,12 @@ We are creating the Flux deployment for Kubernetes
     metadata:
       name: flux-system
     ```
-    
+
     Save file with `:wq`
 
 1. Create role configuration
 
     This role will be guaranteed the access to the Kubernetes objects.
-
 
     ```bash
     vi flux-init/role.yaml
@@ -376,7 +393,7 @@ We are creating the Flux deployment for Kubernetes
       resources: ["helmreleases"]
       verbs: ["*"]
     ```
-    
+
     Save file with `:wq`
 
 1. Create role-binding configuration
@@ -406,7 +423,7 @@ We are creating the Flux deployment for Kubernetes
       namespace: flux-system
       kind: ServiceAccount
     ```
-    
+
     Save file with `:wq`
 
 1. Create cluster role configuration
@@ -441,7 +458,7 @@ We are creating the Flux deployment for Kubernetes
       verbs:
       - list
     ```
-    
+
     Save file with `:wq`
 
 1. Create cluster role binding configuration
@@ -470,7 +487,7 @@ We are creating the Flux deployment for Kubernetes
       namespace: flux-system
       kind: ServiceAccount
     ```
-    
+
     Save file with `:wq`
 
 1. Create kustomization configuration
@@ -495,7 +512,7 @@ We are creating the Flux deployment for Kubernetes
     - cluster-role-binding.yaml
     - namespace.yaml
     ```
-    
+
     Save file with `:wq`
 
 1. Verify your files are correct and ready to deploy them
@@ -509,7 +526,7 @@ We are creating the Flux deployment for Kubernetes
     ```bash
     namespace/flux-system configured (dry run)
     role.rbac.authorization.k8s.io/flux-role configured (dry run)
-    clusterrole.rbac.authorization.k8s.io/flux-crd configured (dry run)
+    clusterrole.rbac.authorization.k8s.io/flux-cr configured (dry run)
     rolebinding.rbac.authorization.k8s.io/flux-sa-rb configured (dry run)
     clusterrolebinding.rbac.authorization.k8s.io/flux-crb configured (dry run)
     ```
@@ -520,13 +537,14 @@ We are creating the Flux deployment for Kubernetes
     git push -u origin demo1
     ```
 
-## Deploy FluxCD
+### Deploy FluxCD
 
 1. Deploy the FluxCD roles on Kubernetes
 
     ```bash
     kubectl apply -k flux-init/
     ```
+
 1. Bootstrap the FluxCD
 
     Create a connection between the FluxCD and the Git repository via SSH. If you are using GitHub, Gitlab or Bitbucket please see the [FluxCD documentation bootstrap section](https://fluxcd.io/docs/cmd/flux_bootstrap/) about the possibilities.
@@ -590,6 +608,7 @@ We are creating the Flux deployment for Kubernetes
     ✔ source-controller: deployment ready
     ✔ all components are healthy
     ```
+
 1. We have a base FluxCD installation on Kubernetes.
 
     You can able to check it with k9s  
@@ -602,7 +621,7 @@ We are creating the Flux deployment for Kubernetes
     kubenctl get pods
     ```
 
-## Create our first deployment with FluxCD
+## App deployments with FluxCD
 
 We will create files, and those will describe our software resources (like a Helm chart repositories),application Helm charts, application configuration.
 
@@ -611,18 +630,21 @@ We will create files, and those will describe our software resources (like a Hel
 Nginx controller will be deployed from Helm chart. In first step need to be defined the Helm repository, after we can prepare the configuration for the nginx-controller Helm Chart and last step to define the Helm release.
 
 Nginx ingress controller is an infrastructure related element and it will be serve our application ingresses. That is the reason, why we add it to the infrastructure directory instead of apps/base.
+
 | Function place | Path |
 |----------------|------|
-| Repository defintion | infrastructure/sources/ |  
+| Repository defintion | infrastructure/base/sources/ |  
 | Flux configuration   | cluster/`<env>`/ |
 | Configuration | apps/`<env>`/ |
 | Helm release configuration | apps/base/`<app name>`/ |
-| Infrastructure Helm relases | infrastructure/base/`<app name>`/ |
+| Infrastructure Helm releases | infrastructure/base/`<app name>`/ |
+
+#### Prepare Helm repository configuration
 
 1. Add Bitnami as Helm repository as source of the Helm charts.
 
     ```bash
-    vi infrastructure/sources/bitnami.yaml
+    vi infrastructure/base/sources/bitnami.yaml
     ```
 
     Enable file edit with `insert` key or `i` key
@@ -646,7 +668,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
-    vi infrastructure/sources/kustomization.yaml
+    vi infrastructure/base/sources/kustomization.yaml
     ```
 
     Enable file edit with `insert` key or `i` key
@@ -665,7 +687,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
 1. Add Kustomization for the `dev` environment.
 
-  If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
+    If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
     vi infrastructure/dev/kustomization.yaml
@@ -680,23 +702,72 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     kind: Kustomization
     namespace: flux-system
     resources:
-    - sources
+    - ../base/sources/
     ```
 
     Save file with `:wq`
 
+1. Add Infrastructure definition for the FluxCD `dev` environment.
+
+    ```bash
+    vi clusters/dev/infrastructure.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+    kind: Kustomization
+    metadata:
+      name: infrastructure-dev
+      namespace: flux-system
+    spec:
+      timeout: 1m0s
+      interval: 5m0s
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+      path: ./infrastructure/dev
+      prune: true
+    ```
+
+    Save file with `:wq`
+
+<!--
+# 1. Add Kustomization for the FluxCD `dev` environment.
+# 
+#     ```bash
+#     vi clusters/dev/kustomization.yaml
+#     ```
+# 
+#     Enable file edit with `insert` key or `i` key
+# 
+#     Add the following contect to the file
+# 
+#     ```yaml
+#     apiVersion: kustomize.config.k8s.io/v1beta1
+#     kind: Kustomization
+#     resources:
+#     - infrastructure.yaml
+#     ```
+# 
+#     Save file with `:wq`
+-->
+
+#### Prepare configuration for deplyoment
+
 1. Create `nginx-controller` directory in infrastructure
 
   ```bash
-  mkdir infrastructure/apps/nginx-controller
+  mkdir infrastructure/base/nginx-controller
   ```
 
 1. Create namespace for Nginx ingress controller
 
-    Note: `ns` - Namespace
-
     ```bash
-    vi infrastructure/apps/namespace.yaml
+    vi infrastructure/base/nginx-controller/namespace.yaml
     ```
 
     Enable file edit with `insert` key or `i` key
@@ -707,7 +778,140 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: nginx-ns
+      name: nginx
     ```
-    
+
     Save file with `:wq`
+
+1. Create cluster role binding
+
+    It gives access to Flux to deploy in this namespace.
+
+    ```bash
+    vi infrastructure/base/nginx-controller/cluster-role-binding.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: flux-nginx-rb
+      namespace: nginx
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: flux-cr
+    subjects:
+      - kind: ServiceAccount
+        name: flux-sa
+        namespace: flux-system
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts
+    ```
+
+    Save file with `:wq`
+
+1. Create Nginx Helm release
+
+    It will be configred the Helm to deploy the chart.
+
+    ```bash
+    vi infrastructure/base/nginx-controller/release.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    metadata:
+      name: nginx
+    spec:
+      releaseName: nginx-ingress-controller
+      chart:
+        spec:
+          chart: nginx-ingress-controller
+          sourceRef:
+            kind: HelmRepository
+            name: bitnami
+            namespace: flux-system
+      interval: 1h0m0s
+      install:
+        remediation:
+          retries: 3
+      values:
+        nameOverride: "nginx"
+        fullnameOverride: "nginx"
+        podSecurityPolicy:
+          enabled: false
+    ```
+
+    Save file with `:wq`
+
+1. Add Kustomization to prepare the Nginx controller deployment on Kubernetes.
+
+    ```bash
+    vi infrastructure/base/nginx-controller/kustomization.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following contect to the file
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: nginx
+    resources:
+    - namespace.yaml
+    - cluster-role-binding.yaml
+    - release.yaml
+    ```
+
+    Save file with `:wq`
+
+1. Add the nginx deployment to the existing Kustomization for the `dev` environment.
+
+    If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
+
+    ```bash
+    vi infrastructure/dev/kustomization.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the line to the list
+
+    ```yaml
+    - ../base/nginx-controller/
+    ```
+
+    The result looks this:
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: flux-system
+    resources:
+    - ../base/sources/
+    - ../base/nginx-controller/
+    ```
+
+    Save file with `:wq`
+
+#### Deploy the configuration
+
+In this case just commit all files and push it into the Git repository
+
+```bash
+git add .
+git commit -m "Add Nginx ingress controller"
+git push
+```
