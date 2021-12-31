@@ -643,7 +643,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
 1. Add Kustomization for sources.
 
-  If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
+    If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
     vi infrastructure/sources/kustomization.yaml
@@ -668,7 +668,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
   If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
-    vi infrastructure/kustomization.yaml
+    vi infrastructure/dev/kustomization.yaml
     ```
 
     Enable file edit with `insert` key or `i` key
