@@ -335,7 +335,7 @@ We are creating the Flux deployment for Kubernetes
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: flux-ns
+      name: flux-system
     ```
     
     Save file with `:wq`
@@ -358,7 +358,7 @@ We are creating the Flux deployment for Kubernetes
     kind: Role
     metadata:
       name: flux-role
-      namespace: flux-ns
+      namespace: flux-system
     rules:
     - apiGroups: ["apiextensions.k8s.io"]
       resources: ["customresourcedefinitions"]
@@ -396,14 +396,14 @@ We are creating the Flux deployment for Kubernetes
     kind: RoleBinding
     metadata:
       name: flux-sa-rb
-      namespace: flux-ns
+      namespace: flux-system
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: Role
       name: flux-role
     subjects:
     - name: flux-sa
-      namespace: flux-ns
+      namespace: flux-system
       kind: ServiceAccount
     ```
     
@@ -467,7 +467,7 @@ We are creating the Flux deployment for Kubernetes
       name: flux-cr
     subjects:
     - name: flux-sa
-      namespace: flux-ns
+      namespace: flux-system
       kind: ServiceAccount
     ```
     
@@ -507,7 +507,7 @@ We are creating the Flux deployment for Kubernetes
     Sample output:
 
     ```bash
-    namespace/flux-ns configured (dry run)
+    namespace/flux-system configured (dry run)
     role.rbac.authorization.k8s.io/flux-role configured (dry run)
     clusterrole.rbac.authorization.k8s.io/flux-crd configured (dry run)
     rolebinding.rbac.authorization.k8s.io/flux-sa-rb configured (dry run)
@@ -551,7 +551,7 @@ We are creating the Flux deployment for Kubernetes
       --path=clusters/dev \
       --private=false \
       --personal=true \
-      --namespace=flux-ns \
+      --namespace=flux-system \
       --token-auth
     ```
 
@@ -571,9 +571,9 @@ We are creating the Flux deployment for Kubernetes
     ► pushing component manifests to "https://github.com/<your username>/flux-demo.git"
     ✔ installed components
     ✔ reconciled components
-    ► determining if source secret "flux-ns/flux-system" exists
+    ► determining if source secret "flux-system/flux-system" exists
     ► generating source secret
-    ► applying source secret "flux-ns/flux-system"
+    ► applying source secret "flux-system/flux-system"
     ✔ reconciled source secret
     ► generating sync manifests
     ✔ generated sync manifests
@@ -581,7 +581,7 @@ We are creating the Flux deployment for Kubernetes
     ► pushing sync manifests to "https://github.com/<your username>/flux-demo.git"
     ► applying sync manifests
     ✔ reconciled sync configuration
-    ◎ waiting for Kustomization "flux-ns/flux-ns" to be reconciled
+    ◎ waiting for Kustomization "flux-system/flux-system" to be reconciled
     ✔ Kustomization reconciled successfully
     ► confirming components are healthy
     ✔ helm-controller: deployment ready
@@ -598,7 +598,7 @@ We are creating the Flux deployment for Kubernetes
     or you can check it manually
 
     ```bash
-    kubens flux-ns
+    kubens flux-system
     kubenctl get pods
     ```
 

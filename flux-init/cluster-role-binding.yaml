@@ -8,5 +8,5 @@ roleRef:
   name: flux-cr
 subjects:
   - name: flux-sa
-    namespace: flux-ns
+    namespace: flux-system
     kind: ServiceAccount
