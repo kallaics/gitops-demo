@@ -736,27 +736,6 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Save file with `:wq`
 
-<!--
-# 1. Add Kustomization for the FluxCD `dev` environment.
-# 
-#     ```bash
-#     vi clusters/dev/kustomization.yaml
-#     ```
-# 
-#     Enable file edit with `insert` key or `i` key
-# 
-#     Add the following contect to the file
-# 
-#     ```yaml
-#     apiVersion: kustomize.config.k8s.io/v1beta1
-#     kind: Kustomization
-#     resources:
-#     - infrastructure.yaml
-#     ```
-# 
-#     Save file with `:wq`
--->
-
 #### Prepare configuration for deplyoment
 
 1. Create `nginx-controller` directory in infrastructure
