@@ -3,47 +3,51 @@
 - [GitOps example](#gitops-example)
   - [Description](#description)
   - [Requirements](#requirements)
-  - [Requirements verfication](#requirements-verfication)
-  - [Create Flux code](#create-flux-code)
+  - [Requirements verification](#requirements-verification)
+  - [Prepare FluxCD](#prepare-fluxcd)
     - [Introduction](#introduction)
     - [Prepare configuration](#prepare-configuration)
     - [Deploy FluxCD](#deploy-fluxcd)
   - [App deployments with FluxCD](#app-deployments-with-fluxcd)
     - [Nginx ingress controller](#nginx-ingress-controller)
       - [Prepare Helm repository configuration](#prepare-helm-repository-configuration)
-      - [Prepare configuration for deplyoment](#prepare-configuration-for-deplyoment)
+      - [Prepare configuration for deployment](#prepare-configuration-for-deployment)
       - [Deploy the configuration](#deploy-the-configuration)
       - [Verify the deployment](#verify-the-deployment)
+    - [Deploy DokuWiki as first app](#deploy-dokuwiki-as-first-app)
+      - [Deploy Dokuwiki configuration](#deploy-dokuwiki-configuration)
+      - [Verify Dokuwiki deployment](#verify-dokuwiki-deployment)
 
-It prepare for educational purpose about the GitOps methodology in the praktice.
+It prepare for educational purpose about the GitOps methodology in the practice.
 
 ## Description
 
-A little game to present a the GitOps.
+A little game to present a the GitOps. This not for production use, this is only learning purpose and to arouse the interest regarding to GitOps.
 
 The plan to easy to understand and lean more about the GitOps.  
-This will show, how can anybody create a simple flow with a simple app. The goal is to create a simple web server with automated  deployment.
+This will show, how can anybody create a simple flow with a simple app. The goal is to create a simple Dokuwiki with automated deployment.
 
-GitOps are not equal with these softwares only. You can use your favorite solutions for git GitHub, Gitlab, BitBucket etc. You can use ArgoCD instead of FluxCD. So lot of different solution are on the internet to apply GitOps methodology on your system. In this current case we will use the Kubernetes as infrastructure.
+GitOps are not equal with these softwares only. You can use your favorite solutions for git GitHub, Gitlab, BitBucket etc. You can use ArgoCD or Rancher instead of FluxCD. So lot of different solutions are on the internet to apply GitOps methodology on your system. In this current case we will use the `GitHub+FluxCD+Kubernetes+Helm` combination to present the GitOps.
 
-Enviroment:
+If you have not GitHub account please create an account for yourself free on [GitHub signup page](https://github.com/join). If you prefer to use a different Git based code store, then some steps will be different later (for example: FluxCD bootstrap command).
 
-- GitHub
-- Kubernetes with Kustomization
+Environment:
+
+- GitHub (code store)
+- Kubernetes with Kustomization (Minikube on local machine)
 
 Used softwares to reach the goal:
 
 - FluxCD
 - Helm
+- Kubernetes (Minikube)
 - Kustomize
 - kubectx + kubens
 - k9s
 
 The solution will work on this way.
 
-User send a git commit. FluxCD will be check it via the source controller` FluxCD component. If it has a new commit try to apply it on the system. The Kustomization supported by Kubernetes default. The Kustomize controller will update the configurtion on Kubernetes elements (Configmaps, Secrects, Deployments, Pods, Services etc.). The deployment with the new config will be done by Helm controller.
-
-I will be use the Flux word instead of the FluxCD in my documentation. Please keep in your mind.
+User push the changes to the GitHub. FluxCD will be check it via the source controller` FluxCD component. If it has a new commit try to apply it on the system. The Kustomization supported by Kubernetes default. The Kustomize controller will update the configuration on Kubernetes elements (Configmaps, Secrets, Deployments, Pods, Services etc.). The deployment with the new config will be done by Helm controller.
 
 ## Requirements
 
@@ -69,9 +73,9 @@ Mandatory components:
 - Kubectx and kubens  
   Official install guide: [https://github.com/ahmetb/kubectx](https://github.com/ahmetb/kubectx)
 - K9s (terminal GUI tool for Kubernetes)  
-  Officail install guide: [https://k9scli.io/topics/install/](https://k9scli.io/topics/install/)
+  Official install guide: [https://k9scli.io/topics/install/](https://k9scli.io/topics/install/)
 
-## Requirements verfication
+## Requirements verification
 
 Please check all of the command is available after the installation. If the version numbers are different (newer, than the examples, it is okay.)
 
@@ -191,7 +195,7 @@ Please check all of the command is available after the installation. If the vers
 1. Run `minikube` command
 
     ```bash
-    minikube start
+    minikube start -cpus 2 --memory 4096
     ```
 
     Sample output:
@@ -233,20 +237,20 @@ Please check all of the command is available after the installation. If the vers
     🌟  The 'metrics-server' addon is enabled
     ```
 
-## Create a personal access token
+## Create a personal access token on GitHub
 
 You need to create a personal access token on GitHub, because your password cannot be used with FluxCD later (and it will be not so safe)
 
 Official guide to access token creation: [https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
-Feel free to define the token name. (example: fluxdemo)
+Feel free to define the token name. (like `fluxdemo`)  
 The repo and the user only enough for this token.
 
 ## Flux preparation steps
 
 ### Create your repository on GitHub
 
-1. Click on top right on **`"+"`** icon and chhose the new repository
+1. Click on top right on **`"+"`** icon and choose the new repository
 1. Fill the repository name: `flux-demo`
 1. Check the checkbox before the text: `Add a README file`
 1. Click on `Create repository` button (bottom of the page)
@@ -268,7 +272,7 @@ The repo and the user only enough for this token.
     git clone https://github.com/<your username>/flux-demo.git
     ```
 
-1. Enter the direytory
+1. Enter the directory
 
     ```bash
     cd flux-demo
@@ -282,7 +286,7 @@ The repo and the user only enough for this token.
 
 ## Prepare FluxCD for first use
 
-All of the command need to run inthe git repo folder.  
+All of the command need to run in the git repo folder.  
 Default: ~/.git/flux-demo
 
 1. Create directory structure:
@@ -294,13 +298,10 @@ Note: It will not work maybe on Windows.
 mkdir -p apps/{base,prod,stg,dev} \
          clusters/{prod,stg,dev} \
          infrastructure/{base,prod,stg,dev} \
-         infrastructure/base/sources \ 
          flux-init/
 ```
 
 More information about the structure: [https://fluxcd.io/docs/guides/repository-structure/](https://fluxcd.io/docs/guides/repository-structure/)
-
-The `"sources"` directory will contains the Helm chart repository definitions. I assume we will use all of the sources in all environment. If you would like to separate it, maybe possible to create a `"sources"` directory inside of each environment specifc directory.
 
 Sample result of tree command:
 
@@ -313,8 +314,7 @@ Sample result of tree command:
 ├── clusters
 |   ├── prod
 |   ├── stg
-│   ├── dev
-|   └── sources
+│   └── dev
 ├── flux-init
 └── infrastructure
     ├── base
@@ -323,7 +323,7 @@ Sample result of tree command:
     └── dev
 ```
 
-## Create Flux code
+## Prepare FluxCD
 
 ### Introduction
 
@@ -335,7 +335,7 @@ If you prefer different editor feel free to use it.
 
 ### Prepare configuration
 
-All of the command need to run inthe git repo folder.  
+All of the command need to run in the git repo folder.  
 Default: ~/.git/flux-demo
 
 We are creating the Flux deployment for Kubernetes
@@ -348,7 +348,7 @@ We are creating the Flux deployment for Kubernetes
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: v1
@@ -369,7 +369,7 @@ We are creating the Flux deployment for Kubernetes
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -407,7 +407,7 @@ We are creating the Flux deployment for Kubernetes
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -429,7 +429,7 @@ We are creating the Flux deployment for Kubernetes
 
 1. Create cluster role configuration
 
-    This role will descirbe the right to the cluster.
+    This role will describe the right to the cluster.
 
     ```bash
     vi flux-init/cluster-role.yaml
@@ -437,7 +437,7 @@ We are creating the Flux deployment for Kubernetes
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -472,7 +472,7 @@ We are creating the Flux deployment for Kubernetes
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -501,7 +501,7 @@ We are creating the Flux deployment for Kubernetes
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
@@ -559,8 +559,8 @@ We are creating the Flux deployment for Kubernetes
     - PATH will be define which environment is deployed here
     - Private means your repo will configured as public (and not private)
     - Personal define the owner is a user and not an organization
-    - Namespace parameter is telling which namespace are prepaed to flux (basically it is optional in thiss case, because all of the config file contains the namespace configuration)
-    - Token auth parater force the token auth method to GitHub
+    - Namespace parameter is telling which namespace are prepared to flux (basically it is optional in this case, because all of the config file contains the namespace configuration)
+    - Token auth parameter force the token auth method to GitHub
 
     ```bash
     flux bootstrap github \
@@ -619,7 +619,7 @@ We are creating the Flux deployment for Kubernetes
 
     ```bash
     kubens flux-system
-    kubenctl get pods
+    kubectl get pods
     ```
 
 ## App deployments with FluxCD
@@ -634,13 +634,21 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
 | Function place | Path |
 |----------------|------|
-| Repository defintion | infrastructure/base/sources/ |  
-| Flux configuration   | cluster/`<env>`/ |
+| Repository definition | infrastructure/base/sources/ |  
+| Flux configuration | cluster/`<env>`/ |
 | Configuration | apps/`<env>`/ |
 | Helm release configuration | apps/base/`<app name>`/ |
 | Infrastructure Helm releases | infrastructure/base/`<app name>`/ |
 
 #### Prepare Helm repository configuration
+
+1. Create directory for Helm chart `sources`:
+
+   Note: The `"sources"` directory will contains the Helm chart repository definitions. I assume we will use all of the sources in all environment. If you would like to separate it, maybe possible to create a `"sources"` directory inside of each environment specific directory.
+
+    ```bash
+    mkdir infrastructure/base/sources
+    ```
 
 1. Add Bitnami as Helm repository as source of the Helm charts.
 
@@ -650,7 +658,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: source.toolkit.fluxcd.io/v1beta1
@@ -675,7 +683,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
@@ -697,7 +705,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
@@ -716,7 +724,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
@@ -736,7 +744,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Save file with `:wq`
 
-#### Prepare configuration for deplyoment
+#### Prepare configuration for deployment
 
 1. Create `nginx-controller` directory in infrastructure
 
@@ -752,7 +760,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: v1
@@ -773,7 +781,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: rbac.authorization.k8s.io/v1
@@ -800,7 +808,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Helm chart values reference: [https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml)
 
-    It will be configred the Helm to deploy the chart.
+    It will be configured the Helm to deploy the chart.
 
     ```bash
     vi infrastructure/base/nginx-controller/release.yaml
@@ -808,7 +816,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -845,7 +853,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 
     Enable file edit with `insert` key or `i` key
 
-    Add the following contect to the file
+    Add the following content to the file
 
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
@@ -901,7 +909,7 @@ git push
 
 You have a choice all of the kubernetes command can be apply in K9s as well. Be careful, the K9s not changing context or namespace in your terminal. It is just happen inside the software.
 
-If you have a kubectx and kubens command the next few step will be easier a bit. The original kubectl commans are also added to the documentation.
+If you have a kubectx and kubens command the next few step will be easier a bit. The original kubectl commands are also added to the documentation.
 
 1. Go to the terminal
 1. Configure the right Kubernetes context
@@ -916,7 +924,7 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
     kubectl config use-context minikube
     ```
 
-1. Get all namepaces
+1. Get all namespaces
 
     ```bash
     kubectl get ns
@@ -942,7 +950,7 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
 
     1. Expose the LoadBalancer IP (minikube works different then the normal Kubernetes)
 
-        Get the exisiting services in `nginx` namespace
+        Get the existing services in `nginx` namespace
 
         ```bash
         kubectl get svc -n nginx
@@ -950,7 +958,7 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
 
         Sample output:
 
-        You will be see the `External-IP` is on `pending` state. If you are using minikibe, it is normal. You can get the right external access with `minikube` command. The port mappings ae in this list that will be shown at minikube command output.
+        You will be see the `External-IP` is on `pending` state. If you are using minikube, it is normal. You can get the right external access with `minikube` command. The port mappings ae in this list that will be shown at minikube command output.
 
         ```bash
         NAME                    TYPE           CLUSTER-IP      EXTERNAL-IP   PORT(S)                      AGE
@@ -967,8 +975,8 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
         Sample result:
 
         ```bash
-        http://192.168.1.2:30308   # this is ponting to port 80 in Kubernete
-        http://192.168.1.2:32583   # this is pointing to port 443 in Kubenetes
+        http://192.168.1.2:30308   # this is pointing to port 80 in Kubernetes
+        http://192.168.1.2:32583   # this is pointing to port 443 in Kubernetes
         ```
 
         Next step to test the URL-s above with curl
@@ -981,3 +989,332 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
         You will be get HTTP error 404, that means our nginx ingress controller is working well, but no ingresses configured yet.
 
         Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD .
+
+### Deploy DokuWiki as first app
+
+Description: Dokuwiki will be deployed by FluxCD and Nginx ingress controller will be take care of the incoming traffic to Dokuwiki.
+
+Incoming traffic: Client -- http traffic --> Nginx ingress controller -> Dokuwiki service -> Dokuwiki pod
+
+Dokuwiki structure, that will be apply below:
+
+- New namespace: `wiki`
+- New clusterrolebinding for the new namespace (FluxCD will get access to the new namespace)
+- 1 pod, with one container for dokuwiki, based on the official Bitnami image
+- 1 service for the pod
+- Added deployment to the Kustomization
+
+Notes:
+
+- New source not need to define, because we will use the existing Bitnami Helm chart repository.
+- Ingress will be defined at the Helm release
+- Service will be defined at the Helm release
+
+Workdir: apps/base/dokuwiki
+
+1. Create `dokuwiki` directory in apps/base
+
+  ```bash
+  mkdir apps/base/dokuwiki
+  ```
+
+1. Create namespace for Nginx ingress controller
+
+    ```bash
+    vi apps/base/dokuwiki/namespace.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following content to the file
+
+    ```yaml
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: wiki
+    ```
+
+    Save file with `:wq`
+
+1. Create cluster role binding
+
+    It gives access to Flux to deploy in this namespace.
+
+    ```bash
+    vi apps/base/dokuwiki/cluster-role-binding.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following content to the file
+
+    ```yaml
+    apiVersion: rbac.authorization.k8s.io/v1
+    kind: RoleBinding
+    metadata:
+      name: flux-dokuwiki-rb
+      namespace: wiki
+    roleRef:
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: flux-cr
+    subjects:
+      - kind: ServiceAccount
+        name: flux-sa
+        namespace: flux-system
+      - apiGroup: rbac.authorization.k8s.io
+        kind: Group
+        name: system:serviceaccounts
+    ```
+
+    Save file with `:wq`
+
+1. Create Dokuwiki Helm release
+
+    Helm chart guide for Dokuwiki: [https://github.com/bitnami/charts/tree/master/bitnami/dokuwiki](https://github.com/bitnami/charts/tree/master/bitnami/dokuwiki)
+
+    You can define the values override in the `values` section of release definition.
+
+    It will be configured the Helm to deploy the chart.
+
+    ```bash
+    vi apps/base/dokuwiki/release.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following content to the file
+
+    ```yaml
+    apiVersion: helm.toolkit.fluxcd.io/v2beta1
+    kind: HelmRelease
+    metadata:
+      name: dokuwiki
+    spec:
+      releaseName: dokuwiki
+      chart:
+        spec:
+          chart: dokuwiki
+          sourceRef:
+            kind: HelmRepository
+            name: bitnami
+            namespace: flux-system
+      interval: 0h5m0s
+      install:
+        remediation:
+          retries: 3
+      values:
+        podSecurityPolicy:
+          enabled: false
+        metrics:
+          enabled: false
+        ingress:
+          enabled: true
+          ingressClassName: "nginx"
+          path: /
+          hostname: dokuwiki.local
+
+    ```
+
+    Save file with `:wq`
+
+1. Add Kustomization to prepare the Dokuwiki deployment on Kubernetes.
+
+    ```bash
+    vi apps/base/dokuwiki/kustomization.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add the following content to the file
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: wiki
+    resources:
+    - namespace.yaml
+    - cluster-role-binding.yaml
+    - release.yaml
+    ```
+
+    Save file with `:wq`
+
+1. Define the Dokuwiki deployment to the Kustomization for the `dev` environment.
+
+    If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
+
+    ```bash
+    vi apps/dev/kustomization.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Create file with this content:
+
+    ```yaml
+    apiVersion: kustomize.config.k8s.io/v1beta1
+    kind: Kustomization
+    namespace: wiki
+    resources:
+    - ../base/dokuwiki/
+    ```
+
+    Save file with `:wq`
+
+1. Define the Dokuwiki deployment for Flux on the `dev` environment.
+
+    The Nginx ingress controller should be deployed before the Dokuwiki, becaus it will take care of the incoming traffic. It can define via `dependsOn` option in `spec` section (see the config below).
+
+    Open file for edit:
+
+    ```bash
+    vi clusters/dev/dokuwiki.yaml
+    ```
+
+    Enable file edit with `insert` key or `i` key
+
+    Add this content to file:
+
+    ```yaml
+    apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+    kind: Kustomization
+    metadata:
+      name: dokuwiki
+      namespace: flux-system
+    spec:
+      dependsOn:
+        - name: infrastructure
+      timeout: 1m0s
+      interval: 5m0s
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+      path: ./apps/dev
+      prune: true
+    ```
+
+    Save file with `:wq`
+
+#### Deploy Dokuwiki configuration
+
+In this case just commit all files and push it into the Git repository
+
+```bash
+git add .
+git commit -m "Added Dokuwiki deployment"
+git push
+```
+
+Flux will be deploy the Dokuwiki automatically. You have to wait max. 1 minutes for Kustomization, and 5 minutes for the beginning of the Helm chart deployment. In worst case you have a new Dokuwiki deployment soon. You can decrease the reconcilation periods, but can be generate a huge load and pending Helm releases.
+
+#### Verify Dokuwiki deployment
+
+You have a choice all of the kubernetes command can be apply in K9s as well. Be careful, the K9s not changing context or namespace in your terminal. It is just happen inside the software.
+
+If you have a kubectx and kubens command the next few step will be easier a bit. The original kubectl commands are also added to the documentation.
+
+1. Go to the terminal
+1. Configure the right Kubernetes context
+
+    ```bash
+    kubectx minikube
+    ```
+
+    or
+
+    ```bash
+    kubectl config use-context minikube
+    ```
+
+1. Get all namespaces
+
+    ```bash
+    kubectl get ns
+    ```
+
+    Sample result:
+    You have to focus to the
+
+    - `wiki` - here are our Dokuwiki resources
+
+    ```bash
+    NAME              STATUS   AGE
+    default           Active   135m
+    flux-system       Active   132m
+    kube-node-lease   Active   135m
+    kube-public       Active   135m
+    kube-system       Active   135m
+    nginx             Active   120m
+    wiki              Active   100m
+    ```
+
+1. Check the ingress definition is there.
+
+    1. Get the existing ingress in `wiki` namespace
+
+        ```bash
+        kubectl get ingress -n wiki
+        ```
+
+        Sample output:
+
+        You can configure the domain in values section at the Helm release: apps/base/dokuwiki/release.yaml
+
+        ```bash
+        NAME       CLASS   HOSTS            ADDRESS        PORTS   AGE
+        dokuwiki   nginx   dokuwiki.local   192.168.1.2   80      41m
+        ```
+
+    1. Add temporary entry to your /etc/hosts file:
+
+        Open file for edit:
+
+        ```bash
+        sudo vi /etc/hosts
+        ```
+
+        Enable file edit with `insert` key or `i` key
+
+        Add this line to the `hosts` file:  
+        Note: IP will be different on your device, so please your machine IP, that are presented in address column by the previous command.
+
+        ```bash
+        192.168.1.2 dokuwiki.local
+        ```
+
+        Add this content to file:
+
+        ```bash
+        127.0.0.1 localhost
+        
+        # Dokuwiki domain
+        192.168.1.2 dokuwiki.local
+        ```
+
+        Save file with `:wq`
+
+    1. Get external URL with minikube
+
+        ```bash
+        minikube service nginx -n nginx --url
+        ```
+
+        Sample result:  
+        Note: IP will be different on your device, so please your machine IP, that are presented in address column by the previous command.
+
+        ```bash
+        http://192.168.1.2:30308   # this is pointing to port 80 in Kubernetes
+        http://192.168.1.2:32583   # this is pointing to port 443 in Kubernetes
+        ```
+
+        Next step to test the URL-s above with curl
+
+        ```bash
+        curl -I http://dokuwiki.local:30308
+        curl -I http://dokuwiki.local
+
+        You will be get HTTP response code 200, that means the Dokuwiki is available and ready to use.
+
+        Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD.
