@@ -657,6 +657,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     kind: HelmRepository
     metadata:
       name: bitnami
+      namespace: flux-system
     spec:
       interval: 30m
       url: https://charts.bitnami.com/bitnami
@@ -681,7 +682,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     kind: Kustomization
     namespace: flux-system
     resources:
-    - bitnami.yaml
+      - bitnami.yaml
     ```
 
     Save file with `:wq`
@@ -701,7 +702,6 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
-    namespace: flux-system
     resources:
     - ../base/sources/
     ```
@@ -722,7 +722,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
     kind: Kustomization
     metadata:
-      name: infrastructure-dev
+      name: infrastructure
       namespace: flux-system
     spec:
       timeout: 1m0s
@@ -786,12 +786,12 @@ Nginx ingress controller is an infrastructure related element and it will be ser
       kind: ClusterRole
       name: flux-cr
     subjects:
-      - kind: ServiceAccount
-        name: flux-sa
-        namespace: flux-system
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts
+    - kind: ServiceAccount
+      name: flux-sa
+      namespace: flux-system
+    - apiGroup: rbac.authorization.k8s.io
+      kind: Group
+      name: system:serviceaccounts
     ```
 
     Save file with `:wq`
@@ -880,7 +880,6 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     ```yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
-    namespace: flux-system
     resources:
     - ../base/sources/
     - ../base/nginx-controller/
@@ -894,7 +893,7 @@ In this case just commit all files and push it into the Git repository
 
 ```bash
 git add .
-git commit -m "Add Nginx ingress controller"
+git commit -m "Added Nginx ingress controller"
 git push
 ```
 
@@ -980,3 +979,5 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
         ```
 
         You will be get HTTP error 404, that means our nginx ingress controller is working well, but no ingresses configured yet.
+
+        Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD .
