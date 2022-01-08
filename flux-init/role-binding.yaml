@@ -8,6 +8,6 @@ roleRef:
   kind: Role
   name: flux-role
 subjects:
-  - name: flux-sa
-    namespace: flux-system
-    kind: ServiceAccount
+- name: flux-sa
+  namespace: flux-system
+  kind: ServiceAccount

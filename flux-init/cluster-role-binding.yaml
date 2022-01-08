@@ -7,6 +7,6 @@ roleRef:
   kind: ClusterRole
   name: flux-cr
 subjects:
-  - name: flux-sa
-    namespace: flux-system
-    kind: ServiceAccount
+- name: flux-sa
+  namespace: flux-system
+  kind: ServiceAccount
