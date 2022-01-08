@@ -8,9 +8,9 @@ roleRef:
   kind: ClusterRole
   name: flux-cr
 subjects:
-  - kind: ServiceAccount
-    name: flux-sa
-    namespace: flux-system
-  - apiGroup: rbac.authorization.k8s.io
-    kind: Group
-    name: system:serviceaccounts
+- kind: ServiceAccount
+  name: flux-sa
+  namespace: flux-system
+- apiGroup: rbac.authorization.k8s.io
+  kind: Group
+  name: system:serviceaccounts
