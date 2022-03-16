@@ -1,5 +1,23 @@
 # Requirements
 
+## About a test environment
+
+I used my home laptop with Linux to create this test. My recommended configuration for the learning.
+
+### HW requirements
+
+* OS: Linux (or Mac or Windows with WSL)
+* Device: Laptop
+* CPU: Intel i5-5500M
+* Memory: 16 GB (4GB will need for Kubernetes environment and the demo)
+* HDD:&#x20;
+  * 2 GB free space (for the requirements)
+  * and few MB for the code
+
+Any other requirement does not matter from the deployment perspective.
+
+### Software prerequisites
+
 Please install the following components as pre-requisites
 
 Optional: If you like the easiest way, just install Homebrew and install every requirements with it on Linux.\
@@ -24,7 +42,7 @@ Mandatory components:
 * K9s (terminal GUI tool for Kubernetes)\
   Official install guide: [https://k9scli.io/topics/install/](https://k9scli.io/topics/install/)
 
-## Requirements verification
+### Verification
 
 Please check all of the command is available after the installation. If the version numbers are different (newer, than the examples, it is okay.)
 
