@@ -1,7 +1,6 @@
 # Table of contents
 
-* [GitOps example](README.md)
-* [Introduction](introduction.md)
+* [Introduction](README.md)
 * [Requirements](requirements.md)
 * [Prepare the environment](prepare-the-environment.md)
 * [Prepare FluxCD](prepare-fluxcd.md)
