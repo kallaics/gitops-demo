@@ -1,6 +1,6 @@
 # Table of contents
 
-* [GitOps demo](README.md)
+* [Welcome](README.md)
 * [Introduction](introduction.md)
 * [Requirements](requirements.md)
 * [Prepare the environment](prepare-the-environment.md)
