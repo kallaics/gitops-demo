@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export GITHUB_TOKEN=
 GIT_DIR=~/test/git
 GIT_URL="https://github.com/kallaics/flux-demo.git"
 GIT_BRANCH="test1"
@@ -218,7 +219,6 @@ else
 fi
 
 echo -n "  Bootstrapping FluxCD..."
-export GITHUB_TOKEN=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
 flux bootstrap github \
   --owner=kallaics \
   --repository=flux-demo \
