@@ -29,8 +29,6 @@ Mandatory components:
   Official install guide: [https://git-scm.com/book/en/v2/Getting-Started-Installing-Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 * Docker\
   Official install guide: [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/)
-* docker-compose\
-  Official install guide [https://docs.docker.com/compose/install/](https://docs.docker.com/compose/install/)
 * Minikube (Kubernetes in Docker)\
   Official install guide: [https://minikube.sigs.k8s.io/docs/start/](https://minikube.sigs.k8s.io/docs/start/)
 * FluxCD CLI tool\
@@ -95,21 +93,7 @@ Please check all of the command is available after the installation. If the vers
     Version:          0.19.0
     GitCommit:        de40ad0
     ```
-3.  Docker compose
-
-    ```bash
-    docker-compose version
-    ```
-
-    Sample command output:
-
-    ```bash
-    docker-compose version 1.27.4, build 40524192
-    docker-py version: 4.3.1
-    CPython version: 3.7.7
-    OpenSSL version: OpenSSL 1.1.0l  10 Sep 2019
-    ```
-4.  Minikube (Kubernetes in Docker)
+3.  Minikube (Kubernetes in Docker)
 
     ```bash
      minikube version
@@ -121,7 +105,7 @@ Please check all of the command is available after the installation. If the vers
     minikube version: v1.24.0
     commit: 76b94fb3c4e8ac5062daf70d60cf03ddcc0a741b
     ```
-5.  FluxCD CLI tool
+4.  FluxCD CLI tool
 
     ```bash
     flux --version

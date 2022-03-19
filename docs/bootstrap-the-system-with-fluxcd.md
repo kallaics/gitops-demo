@@ -18,12 +18,12 @@ After we created the necessary objects for FluxCD, than here is the time to init
     * HTTPS will be used for the communication
     * Owner is your username every time
     * Repository cover your repository name (`"flux-demo"`)
-    * Branch is your branch that you are already created above.
-    * PATH will be define which environment is deployed here
-    * Private means your repo will configured as public (and not private)
+    * Branch is your branch that you are already created above (`"demo1"`)
+    * PATH will be define which environment is deployed here (`"`clusters/dev`"`)
+    * Private means your repository will configured as public (and not private)
     * Personal define the owner is a user and not an organization
     * Namespace parameter is telling which namespace are prepared to flux (basically it is optional in this case, because all of the config file contains the namespace configuration)
-    * Token auth parameter force the token auth method to GitHub
+    * Token auth parameter force the token based authentication method to GitHub
 
     ```bash
     flux bootstrap github \

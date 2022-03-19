@@ -2,29 +2,29 @@
 
 As a next step we need to prepare our machine to able to ready for FluxCD. We will apply these  steps:
 
-* clone the original repo to our local machine
+* GitHub: Create repository and personal access token\
+  (it will be necessary for Flux to communicate with the git repository)
 * create our Kubernetes cluster over Docker
-* create personal access token (it will be necessary for Flux to communicate with the git repository)
+
+## GitHub
+
+### Create your repository on GitHub
+
+1. Click on top right on **`"+"`** icon and choose the new repository
+2. Fill the repository name: `flux-demo`
+3. Check the checkbox before the text: `Add a README file`
+4. Click on `Create repository` button (bottom of the page)
+
+### Create a personal access token
+
+You need to create a personal access token on GitHub, because your password cannot be used with FluxCD later (and it will be not so safe)
+
+Official guide to access token creation: [https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
+
+Feel free to define the token name. (like `fluxdemo`)\
+The repository and the user only enough for this token.
 
 ## Local machine
-
-### Clone this git repo to your machine (optional)
-
-1.  Create a `git` folder in your home directory
-
-    ```bash
-    mkdir git
-    ```
-2.  Clone this repo to your machine
-
-    ```bash
-    git clone https://github.com/<your username>/gitops-demo.git
-    ```
-3.  Enter the cloned code
-
-    ```bash
-    cd gitops-demo
-    ```
 
 ### Create a kubernetes cluster
 
@@ -135,25 +135,5 @@ Sample result of tree command:
     ├── stg
     └── dev
 ```
-
-## GitHub
-
-### Create a personal access token
-
-You need to create a personal access token on GitHub, because your password cannot be used with FluxCD later (and it will be not so safe)
-
-Official guide to access token creation: [https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token)
-
-Feel free to define the token name. (like `fluxdemo`)\
-The repo and the user only enough for this token.
-
-
-
-### Create your repository on GitHub
-
-1. Click on top right on **`"+"`** icon and choose the new repository
-2. Fill the repository name: `flux-demo`
-3. Check the checkbox before the text: `Add a README file`
-4. Click on `Create repository` button (bottom of the page)
 
 ##
