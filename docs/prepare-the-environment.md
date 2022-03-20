@@ -136,4 +136,10 @@ Sample result of tree command:
     └── dev
 ```
 
-##
+### Create .gikeep files&#x20;
+
+We are creating .gitkeep files, for all of the empty directory, because it will appear in git as well.&#x20;
+
+```bash
+find . -type d \( -path "./infrastructure*" -o -path "./apps*" -o -path "./clusters*" \) -exec touch {}/.gitkeep \;
+```

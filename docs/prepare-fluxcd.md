@@ -202,7 +202,14 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     rolebinding.rbac.authorization.k8s.io/flux-sa-rb configured (dry run)
     clusterrolebinding.rbac.authorization.k8s.io/flux-crb configured (dry run)
     ```
-8.  Push your code to the GitHub
+8. Change all stages for git commit
+
+```bash
+git add.
+git commit -m "Init FluxCD environment"
+```
+
+1.  Push your code to the GitHub
 
     ```bash
     git push -u origin demo1
