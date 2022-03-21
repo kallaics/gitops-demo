@@ -204,12 +204,12 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     ```
 8. Change all stages for git commit
 
-```bash
-git add.
-git commit -m "Init FluxCD environment"
-```
+    ```bash
+    git add.
+    git commit -m "Init FluxCD environment"
+    ```
 
-1.  Push your code to the GitHub
+9.  Push your code to the GitHub
 
     ```bash
     git push -u origin demo1
