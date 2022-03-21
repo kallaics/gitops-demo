@@ -13,6 +13,30 @@ RED="\e[31m"
 GREEN="\e[32m"
 NO_COLOR="\e[0m"
 
+declare -ar functions=( verify_requirements prepare_environment flux_prepare flux_bootstrap deploy_ingress_controller deploy_wiki )
+declare -a active_functions
+declare -a removed_functions
+
+function usage() {
+  echo "--------------------------------------------------------------------------------------------------------------------"
+  echo "$0 [options]"
+  echo
+  echo "Options:"
+  echo "'true' will run the step, false will be skip the step. Only just one way can be forced. 'true' values are stronger"
+  echo
+  echo "  -v|--verify-requirements true|false          - verification step configuration"
+  echo "  -e|--prepare-environment true|false          - environment preparation step configuration"
+  echo "  -f|--prepare-flux true|false                 - FluxCD preparation steps configuration"
+  echo "  -b|--flux-bootstrap true|false               - FluxCD bootstrap step configuration"
+  echo "  -i|--deploy-ingress-controller               - Nginx ingress controller configuration"
+  echo "  -w|--deploy-wiki                             - Wiki deployment configuration"
+  echo
+  echo "Examples:"
+  echo "Run only verification step:   $0 -v true"
+  echo "Skip verification step:       $0 -v false"
+  echo "--------------------------------------------------------------------------------------------------------------------"
+}
+
 function ok_msg() {
   [[ ! -z $1 ]] && msg=$1 || msg=""
   echo -e "${GREEN}OK${NO_COLOR} $msg"
@@ -23,6 +47,39 @@ function error_msg() {
   echo -e "${RED}ERROR:${NO_COLOR} $msg"
 }
 
+function org_functions() {
+[[ "$1" != "true" ]] && removed_functions+=( $2 ) || active_functions+=( $2 )
+}
+
+function main() {
+declare -a out
+if [[ ${active_functions[@]} ]]; then
+  out=${active_functions[@]}
+fi
+if [[ ${removed_functions[@]} ]]; then
+  for i in "${functions[@]}"; do
+      skip="false"
+      for j in "${removed_functions[@]}"; do
+          [[ $i == $j ]] && { skip="true"; break; }  
+      done
+      [[ "$skip" == "false" ]] && out+=( "$i" )
+  done
+fi
+if [[ ! ${out[@]} ]];then
+  out=${functions[@]}
+fi
+echo
+echo "Functions: ${out[@]}"
+echo
+
+for func in "${out[@]}"
+do  
+  $func
+  wait $!
+done
+}
+
+function verify_requirements() {
 echo "Verifying required softwares..."
 echo
 
@@ -80,8 +137,9 @@ if [[ "${REQUIREMENTS_ERROR}" -eq "1" ]]; then
   error_msg "One or more of mandatory pre-requisites are missing. Exiting..."
   exit 1;
 fi
+}
 
-
+function prepare_environment() {
 echo
 echo -n "Creating test directory..."
 mkdir -p $GIT_DIR
@@ -137,7 +195,12 @@ if [[ $? -eq 0 ]];then
 else
     error_msg "Cannot create git branch: $GIT_BRANCH"
 fi
+popd >/dev/null 2>&1
+popd >/dev/null 2>&1
+}
 
+function flux_prepare() {
+pushd $GIT_DIR/flux-demo >/dev/null 2>&1
 echo
 echo "Flux preparation"
 echo -n "  Preparing directories..."
@@ -275,7 +338,11 @@ if [[ "${K_STATUS}" -eq "0" ]];then
     git push -u origin $GIT_BRANCH >/dev/null 2>&1 
     [[ $? -eq 0 ]] && ok_msg "($GIT_BRANCH)" || error_msg "Cannot push your changes to git"
 fi
+popd >/dev/null 2>&1
+}
 
+function flux_bootstrap() {
+pushd $GIT_DIR/flux-demo >/dev/null 2>&1
 echo
 echo "FluxCD Bootstrapping"
 echo -n "  Initialize FluxCD environment..."
@@ -301,7 +368,11 @@ flux bootstrap github \
   --read-write-key=true \
   >/dev/null 2>&1
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot run 'flux bootstrap' command"
+popd >/dev/null 2>&1
+}
 
+function deploy_ingress_controller() {
+pushd $GIT_DIR/flux-demo >/dev/null 2>&1
 echo
 echo "Deploy NGINX ingress controller"
 echo -n "  Creating source file directory..."
@@ -443,7 +514,7 @@ EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'kustomization'"
 
 echo -n "  Add configuration to file 'kustomization'..."
-echo "- ../base/nginx-controller/" > infrastructure/dev/kustomization.yaml
+echo "- ../base/nginx-controller/" >> infrastructure/dev/kustomization.yaml
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot add configuration for file 'kustomization'"
 
 echo "  Pushing files to git"
@@ -460,26 +531,88 @@ echo -n "    Pushing commit to Git..."
 git push >/dev/null 2>&1
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot push to Git"
 
-echo -n "  Get response from Nginx ingress controller (wait max. 30s)..."
-for t in $(seq 1 30)
+echo -n "  Get response from Nginx ingress controller (wait max. 120s)..."
+for t in $(seq 1 120)
 do
-NGINX_SVC_URL=$(minikube service nginx -n nginx --url | head -n 1 >/dev/null)
-[[ $? -eq 0 ]] && break
-sleep 1;
+  minikube service nginx -n nginx --url >/dev/null 2>&1
+  if [[ $? -eq 0 ]]; then
+    NGINX_SVC_URL=$(minikube service nginx -n nginx --url | head -n 1)
+    break
+  fi
+  if [[ $t -eq 30 ]]; then 
+    error_msg "NGINX service not in up state under 30s. Exiting..."
+    exit 1
+  fi
+  sleep 1
 done
-for t in $(seq 1 30)
-do
-RESP=`curl -s -o /dev/null -I -w "%{http_code}" $NGINX_SVC_URL/healthz 2>/dev/null`
-echo $RESP
-[[ "${RESP}" -eq "404" ]] && break
-sleep 1;
-done
-[[ "${RESP}" -eq "404" ]] && ok_msg || error_msg "Cannot create config file for source kustomization"
+
+if [[ ! -z "${NGINX_SVC_URL}" ]]; then
+  RESP=0
+  for t in $(seq 1 60)
+  do
+  RESP=$(curl -s -o /dev/null -I -w "%{http_code}" $NGINX_SVC_URL/healthz)
+  [[ "${RESP}" -eq "200" ]] && break
+  sleep 1;
+  done
+  [[ "${RESP}" -eq "200" ]] && ok_msg || error_msg "No reply from $NGINX_SVC_URL"
+fi
+popd >/dev/null 2>&1
+}
+
+function deploy_wiki() {
+pushd $GIT_DIR/flux-demo >/dev/null 2>&1
 
 popd >/dev/null 2>&1
-popd >/dev/null 2>&1
-echo -n "Current path..."
-pwd
+}
+
+# process_switches
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -v|--verify-requirements)
+      org_functions $2 "verify_requirements"
+      shift # past argument
+      shift # past value
+      ;;
+    -e|--prepare-environment)
+      org_functions $2 "prepare_environment"
+      shift # past argument
+      shift # past value
+      ;;
+    -f|--prepare-flux)
+      org_functions $2 "flux_prepare"
+      shift # past argument
+      shift # past value
+      ;;
+    -b|--flux-bootstrap)
+      org_functions $2 "flux_bootstrap"
+      shift # past argument
+      shift # past value
+      ;;
+    -i|--deploy-ingress-controller)
+      org_functions $2 "deploy_ingress_controller"
+      shift # past argument
+      shift # past value
+      ;;
+    -w|--deploy-wiki)
+      org_functions $2 "deploy_wiki"
+      shift # past argument
+      shift # past value
+      ;;
+    -h|--help)
+      usage
+      shift # past argument
+      ;;
+    -*|--*)
+      echo "Unknown option $1"
+      exit 1
+      ;;
+    *)
+      shift # past argument
+      ;;
+  esac
+done
+
+main
 
 echo
 echo "Done"
