@@ -28,7 +28,7 @@ The repository and the user only enough for this token.
 
 ### Create a kubernetes cluster
 
-1.  Run `minikube` command
+1. Run `minikube` command
 
     ```bash
     minikube start -cpus 2 --memory 4096
@@ -59,7 +59,8 @@ The repository and the user only enough for this token.
     🌟  Enabled addons: default-storageclass, storage-provisioner
     🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
     ```
-2.  Enable metrics for CPU and memory usage (optional)
+
+2. Enable metrics for CPU and memory usage (optional)
 
     ```bash
     minikube addons enable metrics-server
@@ -75,24 +76,27 @@ The repository and the user only enough for this token.
 ### Clone your repository to your device
 
 1. Open a terminal (command line)
-2.  Enter the `git` directory (if you are not there already)
+2. Enter the `git` directory (if you are not there already)
 
     ```bash
     cd ~/git
     ```
-3.  Clone the repository to your folder
+
+3. Clone the repository to your folder
 
     Replace `"<your username>"` with your username
 
     ```bash
     git clone https://github.com/<your username>/flux-demo.git
     ```
-4.  Enter the directory
+
+4. Enter the directory
 
     ```bash
     cd flux-demo
     ```
-5.  Create a new branch for test
+
+5. Create a new branch for test
 
     ```bash
     git checkout -b demo1
@@ -136,9 +140,9 @@ Sample result of tree command:
     └── dev
 ```
 
-### Create .gikeep files&#x20;
+### Create .gitkeep files
 
-We are creating .gitkeep files, for all of the empty directory, because it will appear in git as well.&#x20;
+We are creating .gitkeep files, for all of the empty directory, because it will appear in git as well.
 
 ```bash
 find . -type d \( -path "./infrastructure*" -o -path "./apps*" -o -path "./clusters*" \) -exec touch {}/.gitkeep \;

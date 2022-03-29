@@ -28,5 +28,3 @@ Used softwares to reach the goal:
 The solution will work on this way.
 
 User push the changes to the GitHub. FluxCD will be check it via the source controller\` FluxCD component. If it has a new commit try to apply it on the system. The Kustomization supported by Kubernetes default. The Kustomize controller will update the configuration on Kubernetes elements (Configmaps, Secrets, Deployments, Pods, Services etc.). The deployment with the new config will be done by Helm controller.
-
-##

@@ -2,14 +2,15 @@
 
 After we created the necessary objects for FluxCD, than here is the time to initialize it.
 
-### Deploy FluxCD
+## Deploy FluxCD
 
-1.  Deploy the FluxCD rrequirements on Kubernetes
+1. Deploy the FluxCD requirements on Kubernetes
 
     ```bash
     kubectl apply -k flux-init/
     ```
-2.  Bootstrap the FluxCD
+
+2. Bootstrap the FluxCD
 
     Create a connection between the FluxCD and the Git repository via SSH. If you are using GitHub, Gitlab or Bitbucket please see the [FluxCD documentation bootstrap section](https://fluxcd.io/docs/cmd/flux\_bootstrap/) about the possibilities.
 
@@ -19,7 +20,7 @@ After we created the necessary objects for FluxCD, than here is the time to init
     * Owner is your username every time
     * Repository cover your repository name (`"flux-demo"`)
     * Branch is your branch that you are already created above (`"demo1"`)
-    * PATH will be define which environment is deployed here (`"`clusters/dev`"`)
+    * PATH will be define which environment is deployed here (`"clusters/dev"`)
     * Private means your repository will configured as public (and not private)
     * Personal define the owner is a user and not an organization
     * Namespace parameter is telling which namespace are prepared to flux (basically it is optional in this case, because all of the config file contains the namespace configuration)
@@ -72,7 +73,8 @@ After we created the necessary objects for FluxCD, than here is the time to init
     ✔ source-controller: deployment ready
     ✔ all components are healthy
     ```
-3.  We have a base FluxCD installation on Kubernetes.
+
+3. We have a base FluxCD installation on Kubernetes.
 
     You can able to check it with k9s (the k9s documentation are linked above) or you can check it manually
 
@@ -80,5 +82,3 @@ After we created the necessary objects for FluxCD, than here is the time to init
     kubens flux-system
     kubectl get pods
     ```
-
-##

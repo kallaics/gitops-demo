@@ -10,7 +10,7 @@ I used my home laptop with Linux to create this test. My recommended configurati
 * Device: Laptop
 * CPU: Intel i5-5500M
 * Memory: 16 GB (4GB will need for Kubernetes environment and the demo)
-* HDD:&#x20;
+* HDD:
   * 2 GB free space (for the requirements)
   * and few MB for the code
 
@@ -44,7 +44,7 @@ Mandatory components:
 
 Please check all of the command is available after the installation. If the version numbers are different (newer, than the examples, it is okay.)
 
-1.  Git client
+1. Git client
 
     ```bash
     git --version
@@ -55,7 +55,8 @@ Please check all of the command is available after the installation. If the vers
     ```bash
     git version 2.17.1
     ```
-2.  Docker
+
+2. Docker
 
     ```bash
     docker version
@@ -93,7 +94,8 @@ Please check all of the command is available after the installation. If the vers
     Version:          0.19.0
     GitCommit:        de40ad0
     ```
-3.  Minikube (Kubernetes in Docker)
+
+3. Minikube (Kubernetes in Docker)
 
     ```bash
      minikube version
@@ -105,7 +107,8 @@ Please check all of the command is available after the installation. If the vers
     minikube version: v1.24.0
     commit: 76b94fb3c4e8ac5062daf70d60cf03ddcc0a741b
     ```
-4.  FluxCD CLI tool
+
+4. FluxCD CLI tool
 
     ```bash
     flux --version
@@ -116,5 +119,3 @@ Please check all of the command is available after the installation. If the vers
     ```bash
     flux version 0.24.1
     ```
-
-##

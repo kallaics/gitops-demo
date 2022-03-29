@@ -2,9 +2,7 @@
 
 We will create files, and those will describe our software resources (like a Helm chart repositories),application Helm charts, application configuration.
 
-
-
-### Nginx ingress controller
+## Nginx ingress controller
 
 Nginx controller will be deployed from Helm chart. In first step need to be defined the Helm repository, after we can prepare the configuration for the nginx-controller Helm Chart and last step to define the Helm release.
 
@@ -18,26 +16,20 @@ Nginx ingress controller is an infrastructure related element and it will be ser
 | Helm release configuration   | apps/base/`<app name>`/           |
 | Infrastructure Helm releases | infrastructure/base/`<app name>`/ |
 
-#### Prepare Helm repository configuration
+### Prepare Helm repository configuration
 
-1.  Create directory for Helm chart `sources`:
+1. Create directory for Helm chart `sources`:
 
     Note: The `"sources"` directory will contains the Helm chart repository definitions. I assume we will use all of the sources in all environment. If you would like to separate it, maybe possible to create a `"sources"` directory inside of each environment specific directory.
 
     ```bash
     mkdir infrastructure/base/sources
     ```
-2.  Add Bitnami as Helm repository as source of the Helm charts.
+
+2. Add Bitnami as Helm repository as source of the Helm charts.
 
     ```bash
-    vi infrastructure/base/sources/bitnami.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > infrastructure/base/sources/bitnami.yaml
     apiVersion: source.toolkit.fluxcd.io/v1beta1
     kind: HelmRepository
     metadata:
@@ -46,187 +38,137 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     spec:
       interval: 30m
       url: https://charts.bitnami.com/bitnami
+    EOF
     ```
 
-    Save file with `:wq`
-3.  Add Kustomization for sources.
+3. Add Kustomization for sources.
 
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
-    vi infrastructure/base/sources/kustomization.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > infrastructure/base/sources/kustomization.yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     namespace: flux-system
     resources:
-      - bitnami.yaml
+    - bitnami.yaml
+    EOF
     ```
 
-    Save file with `:wq`
-4.  Add Kustomization for the `dev` environment.
+4. Add Kustomization for the `dev` environment.
 
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
-    vi infrastructure/dev/kustomization.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > infrastructure/dev/kustomization.yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     resources:
     - ../base/sources/
+    EOF
     ```
 
-    Save file with `:wq`
-5.  Add Infrastructure definition for the FluxCD `dev` environment.
+5. Add Infrastructure definition for the FluxCD `dev` environment.
 
     ```bash
-    vi clusters/dev/infrastructure.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > clusters/dev/infrastructure.yaml
     apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
     kind: Kustomization
     metadata:
-      name: infrastructure
-      namespace: flux-system
+    name: infrastructure
+    namespace: flux-system
     spec:
-      timeout: 1m0s
-      interval: 5m0s
-      sourceRef:
+    timeout: 1m0s
+    interval: 5m0s
+    sourceRef:
         kind: GitRepository
         name: flux-system
-      path: ./infrastructure/dev
-      prune: true
+    path: ./infrastructure/dev
+    prune: true
+    EOF
     ```
 
-    Save file with `:wq`
-
-#### Prepare configuration for deployment
+### Prepare configuration for deployment
 
 1. Create `nginx-controller` directory in infrastructure
 
-```bash
-mkdir infrastructure/base/nginx-controller
-```
-
-1.  Create namespace for Nginx ingress controller
-
     ```bash
-    vi infrastructure/base/nginx-controller/namespace.yaml
+    mkdir infrastructure/base/nginx-controller
     ```
 
-    Enable file edit with `insert` key or `i` key
+2. Create namespace for Nginx ingress controller
 
-    Add the following content to the file
-
-    ```yaml
+    ```bash
+    cat << EOF > infrastructure/base/nginx-controller/namespace.yaml
     apiVersion: v1
     kind: Namespace
     metadata:
-      name: nginx
+    name: nginx
+    EOF
     ```
 
-    Save file with `:wq`
-2.  Create cluster role binding
+3. Create cluster role binding
 
     It gives access to Flux to deploy in this namespace.
 
     ```bash
-    vi infrastructure/base/nginx-controller/cluster-role-binding.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > infrastructure/base/nginx-controller/cluster-role-binding.yaml
     apiVersion: rbac.authorization.k8s.io/v1
     kind: RoleBinding
     metadata:
-      name: flux-nginx-rb
-      namespace: nginx
+    name: flux-nginx-rb
+    namespace: nginx
     roleRef:
-      apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: flux-cr
+    apiGroup: rbac.authorization.k8s.io
+    kind: ClusterRole
+    name: flux-cr
     subjects:
     - kind: ServiceAccount
-      name: flux-sa
-      namespace: flux-system
+    name: flux-sa
+    namespace: flux-system
     - apiGroup: rbac.authorization.k8s.io
-      kind: Group
-      name: system:serviceaccounts
+    kind: Group
+    name: system:serviceaccounts
+    EOF
     ```
 
-    Save file with `:wq`
-3.  Create Nginx Helm release
+4. Create Nginx Helm release
 
     Helm chart values reference: [https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml)
 
     It will be configured the Helm to deploy the chart.
 
     ```bash
-    vi infrastructure/base/nginx-controller/release.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > infrastructure/base/nginx-controller/release.yaml
     apiVersion: helm.toolkit.fluxcd.io/v2beta1
     kind: HelmRelease
     metadata:
-      name: nginx
+    name: nginx
     spec:
-      releaseName: nginx-ingress-controller
-      chart:
+    releaseName: nginx-ingress-controller
+    chart:
         spec:
-          chart: nginx-ingress-controller
-          sourceRef:
+        chart: nginx-ingress-controller
+        sourceRef:
             kind: HelmRepository
             name: bitnami
             namespace: flux-system
-      interval: 0h5m0s
-      install:
+    interval: 0h5m0s
+    install:
         remediation:
-          retries: 3
-      values:
+        retries: 3
+    values:
         nameOverride: "nginx"
         fullnameOverride: "nginx"
         podSecurityPolicy:
-          enabled: false
+        enabled: false
+    EOF
     ```
 
-    Save file with `:wq`
-4.  Add Kustomization to prepare the Nginx controller deployment on Kubernetes.
+5. Add Kustomization to prepare the Nginx controller deployment on Kubernetes.
 
     ```bash
-    vi infrastructure/base/nginx-controller/kustomization.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > infrastructure/base/nginx-controller/kustomization.yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     namespace: nginx
@@ -234,23 +176,15 @@ mkdir infrastructure/base/nginx-controller
     - namespace.yaml
     - cluster-role-binding.yaml
     - release.yaml
+    EOF
     ```
 
-    Save file with `:wq`
-5.  Add the nginx deployment to the existing Kustomization for the `dev` environment.
+6. Add the nginx deployment to the existing Kustomization for the `dev` environment.
 
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
-    vi infrastructure/dev/kustomization.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the line to the list
-
-    ```yaml
-    - ../base/nginx-controller/
+    echo "- ../base/nginx-controller/" >> infrastructure/dev/kustomization.yaml
     ```
 
     The result looks this:
@@ -263,26 +197,26 @@ mkdir infrastructure/base/nginx-controller
     - ../base/nginx-controller/
     ```
 
-    Save file with `:wq`
-
-#### Deploy the configuration
+### Deploy the configuration
 
 In this case just commit all files and push it into the Git repository
 
 ```bash
+git pull
 git add .
 git commit -m "Added Nginx ingress controller"
 git push
 ```
 
-#### Verify the deployment
+### Verify the deployment
 
 You have a choice all of the kubernetes command can be apply in K9s as well. Be careful, the K9s not changing context or namespace in your terminal. It is just happen inside the software.
 
 If you have a kubectx and kubens command the next few step will be easier a bit. The original kubectl commands are also added to the documentation.
 
 1. Go to the terminal
-2.  Configure the right Kubernetes context
+
+2. Configure the right Kubernetes context
 
     ```bash
     kubectx minikube
@@ -293,7 +227,8 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
     ```bash
     kubectl config use-context minikube
     ```
-3.  Get all namespaces
+
+3. Get all namespaces
 
     ```bash
     kubectl get ns
@@ -313,8 +248,10 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
     kube-system       Active   135m
     nginx             Active   120m
     ```
+
 4. Check the ingress controller is working well
-   1.  Expose the LoadBalancer IP (minikube works different then the normal Kubernetes)
+
+   1. Expose the LoadBalancer IP (minikube works different then the normal Kubernetes)
 
        Get the existing services in `nginx` namespace
 
@@ -355,5 +292,3 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
        You will be get HTTP error 404, that means our nginx ingress controller is working well, but no ingresses configured yet.
 
        Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD .
-
-###
