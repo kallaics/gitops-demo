@@ -57,9 +57,9 @@ if [[ ${active_functions[@]} ]]; then
   out=${active_functions[@]}
 fi
 if [[ ${removed_functions[@]} ]]; then
-  for i in "${functions[@]}"; do
+  for i in ${functions[@]}; do
       skip="false"
-      for j in "${removed_functions[@]}"; do
+      for j in ${removed_functions[@]}; do
           [[ $i == $j ]] && { skip="true"; break; }  
       done
       [[ "$skip" == "false" ]] && out+=( "$i" )
@@ -68,14 +68,13 @@ fi
 if [[ ! ${out[@]} ]];then
   out=${functions[@]}
 fi
-echo
-echo "Functions: ${out[@]}"
-echo
+# echo
+# echo "Functions: ${out[@]}"
+# echo
 
-for func in "${out[@]}"
+for func in ${out[@]}
 do  
-  $func
-  wait $!
+  eval ${func}
 done
 }
 
@@ -228,10 +227,10 @@ metadata:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for namespace"
 
-echo -n "  Creating config file for 'flux-role' role..."
+echo -n "  Creating config file for cluster role 'flux-role'..."
 cat << EOF > flux-init/role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
+kind: ClusterRole
 metadata:
   name: flux-role
   namespace: flux-system
@@ -252,19 +251,19 @@ rules:
   resources: ["helmreleases"]
   verbs: ["*"]
 EOF
-[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for role"
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config cluster role"
 
 
 echo -n "  Creating config file for role binding..."
 cat << EOF > flux-init/role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
+kind: ClusterRoleBinding
 metadata:
   name: flux-sa-rb
   namespace: flux-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
-  kind: Role
+  kind: ClusterRole
   name: flux-role
 subjects:
 - name: flux-sa
@@ -273,45 +272,45 @@ subjects:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for role binding"
 
-echo -n "  Creating config file for cluster role..."
-cat << EOF > flux-init/cluster-role.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
-metadata:
-  name: flux-cr
-rules:
-- apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - list
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - list
-EOF
-[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for cluster role"
-
-echo -n "  Creating config file for cluster role binding..."
-cat << EOF > flux-init/cluster-role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: flux-crb
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: flux-cr
-subjects:
-- name: flux-sa
-  namespace: flux-system
-  kind: ServiceAccount
-EOF
-[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for cluster role binding"
+# echo -n "  Creating config file for cluster role..."
+# cat << EOF > flux-init/cluster-role.yaml
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRole
+# metadata:
+#   name: flux-cr
+# rules:
+# - apiGroups:
+#   - apiextensions.k8s.io
+#   resources:
+#   - customresourcedefinitions
+#   verbs:
+#   - list
+#   - watch
+# - apiGroups:
+#   - ""
+#   resources:
+#   - namespaces
+#   verbs:
+#   - list
+# EOF
+# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for cluster role"
+# 
+# echo -n "  Creating config file for cluster role binding..."
+# cat << EOF > flux-init/cluster-role-binding.yaml
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: ClusterRoleBinding
+# metadata:
+#   name: flux-crb
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: flux-cr
+# subjects:
+# - name: flux-sa
+#   namespace: flux-system
+#   kind: ServiceAccount
+# EOF
+# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for cluster role binding"
 
 echo -n "  Creating config file for kustomization..."
 cat << EOF > flux-init/kustomization.yaml
@@ -453,26 +452,26 @@ metadata:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for namespace"
 
-echo -n "  Creating config file 'cluster role binding'..."
-cat << EOF > infrastructure/base/nginx-controller/cluster-role-binding.yaml
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: flux-nginx-rb
-  namespace: nginx
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: flux-cr
-subjects:
-- kind: ServiceAccount
-  name: flux-sa
-  namespace: flux-system
-- apiGroup: rbac.authorization.k8s.io
-  kind: Group
-  name: system:serviceaccounts
-EOF
-[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'cluster role binding'"
+# echo -n "  Creating config file 'cluster role binding'..."
+# cat << EOF > infrastructure/base/nginx-controller/cluster-role-binding.yaml
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: flux-nginx-rb
+#   namespace: nginx
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: flux-cr
+# subjects:
+# - kind: ServiceAccount
+#   name: flux-sa
+#   namespace: flux-system
+# - apiGroup: rbac.authorization.k8s.io
+#   kind: Group
+#   name: system:serviceaccounts
+# EOF
+# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'cluster role binding'"
 
 echo -n "  Creating config file for 'Helm release'..."
 cat << EOF > infrastructure/base/nginx-controller/release.yaml
@@ -524,23 +523,28 @@ git add . >/dev/null 2>&1
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot add files to Git commit"
 
 echo -n "    Creating Git commit..."
-git commit -m "Added Nginx ingress controller" >/dev/null 2>&1
-[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot commit to Git"
+GIT_DIFF=$(git diff --cached | wc -c)
+if [[ $GIT_DIFF -eq 0 ]]; then
+  ok_msg "(No changes, skipped)"
+else
+  git commit -m "Added Nginx ingress controller" >/dev/null 2>&1
+  [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot commit to Git"
+fi
 
 echo -n "    Pushing commit to Git..."
 git push >/dev/null 2>&1
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot push to Git"
 
 echo -n "  Get response from Nginx ingress controller (wait max. 120s)..."
-for t in $(seq 1 120)
+for t in $(seq 1 60)
 do
   minikube service nginx -n nginx --url >/dev/null 2>&1
   if [[ $? -eq 0 ]]; then
     NGINX_SVC_URL=$(minikube service nginx -n nginx --url | head -n 1)
     break
   fi
-  if [[ $t -eq 30 ]]; then 
-    error_msg "NGINX service not in up state under 30s. Exiting..."
+  if [[ $t -eq 60 ]]; then 
+    error_msg "NGINX service not in up state under 60s. Exiting..."
     exit 1
   fi
   sleep 1
@@ -555,12 +559,174 @@ if [[ ! -z "${NGINX_SVC_URL}" ]]; then
   sleep 1;
   done
   [[ "${RESP}" -eq "200" ]] && ok_msg || error_msg "No reply from $NGINX_SVC_URL"
+else
+  error_msg "Nginx URL not available. ($NGINX_SVC_URL)"
 fi
 popd >/dev/null 2>&1
 }
 
 function deploy_wiki() {
 pushd $GIT_DIR/flux-demo >/dev/null 2>&1
+echo -n "  Creating directory for DokuWiki..."
+mkdir -p apps/base/dokuwiki
+if [[ $? -eq 0 ]]; then
+  ok_msg
+else
+  error_msg "Cannot create source directory 'apps/base/dokuwiki'"
+  exit 1
+fi
+
+echo -n "  Creating config file for namespace 'wiki' ..."
+cat << EOF > apps/base/dokuwiki/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wiki
+EOF
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for namespace 'wiki'"
+
+# echo -n "  Creating config file 'cluster role binding'..."
+# cat << EOF > apps/base/dokuwiki/cluster-role-binding.yaml
+# apiVersion: rbac.authorization.k8s.io/v1
+# kind: RoleBinding
+# metadata:
+#   name: flux-dokuwiki-rb
+#   namespace: wiki
+# roleRef:
+#   apiGroup: rbac.authorization.k8s.io
+#   kind: ClusterRole
+#   name: flux-cr
+# subjects:
+# - kind: ServiceAccount
+#   name: flux-sa
+#   namespace: flux-system
+# - apiGroup: rbac.authorization.k8s.io
+#   kind: Group
+#   name: system:serviceaccounts
+# EOF
+# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'cluster role binding'"
+
+echo -n "  Creating config file for 'Helm release'..."
+cat << EOF > apps/base/dokuwiki/release.yaml
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: dokuwiki
+spec:
+  releaseName: dokuwiki
+  chart:
+    spec:
+      chart: dokuwiki
+      sourceRef:
+        kind: HelmRepository
+        name: bitnami
+        namespace: flux-system
+  interval: 0h5m0s
+  install:
+    remediation:
+      retries: 3
+  values:
+    dokuwikiUsername: "admin"
+    dokuwikiPassword: "wikiadmin"
+    dokuwikiEmail: "user@example.com"
+    dokuwikiFullName: "Wiki User"
+    dokuwikiWikiName: "My Wiki page deployed by Flux"
+    podSecurityPolicy:
+      enabled: false
+    metrics:
+      enabled: false
+    ingress:
+      enabled: true
+      ingressClassName: "nginx"
+      path: /
+      hostname: dokuwiki.local
+EOF
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'Helm release'"
+
+echo -n "  Creating config file 'kustomization'..."
+cat << EOF > apps/base/dokuwiki/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: wiki
+resources:
+- namespace.yaml
+- cluster-role-binding.yaml
+- release.yaml
+EOF
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'kustomization'"
+
+echo -n "  Creating directory for DokuWiki..."
+mkdir -p apps/dev/dokuwiki
+if [[ $? -eq 0 ]]; then
+  ok_msg
+else
+  error_msg "Cannot create source directory 'apps/dev/dokuwiki'"
+  exit 1
+fi
+
+echo -n "  Add configuration to file 'kustomization'..."
+cat << EOF > apps/dev/dokuwiki/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+name: Dokuwiki-DEV
+namespace: wiki
+resources:
+- ../../base/dokuwiki/
+EOF
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot add configuration for file 'kustomization'"
+
+echo -n "  Creating config file 'kustomization'..."
+cat << EOF > clusters/dev/dokuwiki.yaml
+apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
+kind: Kustomization
+metadata:
+  name: dokuwiki
+  namespace: flux-system
+spec:
+  timeout: 1m0s
+  interval: 5m0s
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  path: ./apps/dev/dokuwiki
+  prune: true
+EOF
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'kustomization'"
+
+echo "  Pushing files to git"
+echo -n "    Adding files to Git commit..."
+git pull >/dev/null 2>&1
+git add . >/dev/null 2>&1
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot add files to Git commit"
+
+echo -n "    Creating Git commit..."
+GIT_DIFF=$(git diff --cached | wc -c)
+if [[ $GIT_DIFF -eq 0 ]]; then
+  ok_msg "(No changes, skipped)"
+else
+  git commit -m "Added Dokuwiki" >/dev/null 2>&1
+  [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot commit to Git"
+fi
+
+echo -n "    Pushing commit to Git..."
+git push >/dev/null 2>&1
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot push to Git"
+
+echo -n "  Get response from DokuWiki (wait max. 120s)..."
+WIKI_SVC_PORT=$(minikube service list dokuwiki -n wiki | awk '/80/ {print $8;}' | cut -d':' -f3)
+WIKI_SVC_URL=http://dokuwiki.local:$WIKI_SVC_PORT
+if [[ ! -z "${WIKI_SVC_URL}" ]]; then
+  RESP=0
+  for t in $(seq 1 60)
+  do
+  RESP=$(curl -s -o /dev/null -I -w "%{http_code}" $WIKI_SVC_URL/)
+  [[ "${RESP}" -eq "200" ]] && break
+  sleep 1;
+  done
+  [[ "${RESP}" -eq "200" ]] && ok_msg || error_msg "No reply from $WIKI_SVC_URL"
+fi
+echo "Dokuwiki URL: ${WIKI_SVC_URL}"
+echo "Login: admin/wikiadmin"
 
 popd >/dev/null 2>&1
 }
