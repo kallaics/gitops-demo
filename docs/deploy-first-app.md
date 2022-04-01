@@ -1,12 +1,12 @@
 # Deploy first app
 
-The good news we are prepared our system and ready to our first application deployment.&#x20;
+The good news we are prepared our system and ready to our first application deployment.
 
-## Deploy DokuWiki&#x20;
+## Deploy DokuWiki
 
 ### Description
 
-&#x20;Dokuwiki will be deployed by FluxCD and Nginx ingress controller will be take care of the incoming traffic to Dokuwiki.
+Dokuwiki will be deployed by FluxCD and Nginx ingress controller will be take care of the incoming traffic to Dokuwiki.
 
 Incoming traffic: Client -- http traffic --> Nginx ingress controller -> Dokuwiki service -> Dokuwiki pod
 
@@ -37,54 +37,15 @@ Workdir: apps/base/dokuwiki
 2. Create namespace for Nginx ingress controller
 
     ```bash
-    vi apps/base/dokuwiki/namespace.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > apps/base/dokuwiki/namespace.yaml
     apiVersion: v1
     kind: Namespace
     metadata:
       name: wiki
+    EOF
     ```
 
-    Save file with `:wq`
-3. Create cluster role binding
-
-    It gives access to Flux to deploy in this namespace.
-
-    ```bash
-    vi apps/base/dokuwiki/cluster-role-binding.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: RoleBinding
-    metadata:
-      name: flux-dokuwiki-rb
-      namespace: wiki
-    roleRef:
-      apiGroup: rbac.authorization.k8s.io
-      kind: ClusterRole
-      name: flux-cr
-    subjects:
-      - kind: ServiceAccount
-        name: flux-sa
-        namespace: flux-system
-      - apiGroup: rbac.authorization.k8s.io
-        kind: Group
-        name: system:serviceaccounts
-    ```
-
-    Save file with `:wq`
-4. Create Dokuwiki Helm release
+3. Create Dokuwiki Helm release
 
     Helm chart guide for Dokuwiki: [https://github.com/bitnami/charts/tree/master/bitnami/dokuwiki](https://github.com/bitnami/charts/tree/master/bitnami/dokuwiki)
 
@@ -93,14 +54,7 @@ Workdir: apps/base/dokuwiki
     It will be configured the Helm to deploy the chart.
 
     ```bash
-    vi apps/base/dokuwiki/release.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```yaml
+    cat << EOF > apps/base/dokuwiki/release.yaml
     apiVersion: helm.toolkit.fluxcd.io/v2beta1
     kind: HelmRelease
     metadata:
@@ -135,10 +89,10 @@ Workdir: apps/base/dokuwiki
           ingressClassName: "nginx"
           path: /
           hostname: dokuwiki.local
+    EOF
     ```
 
-    Save file with `:wq`
-5.  Add Kustomization to prepare the Dokuwiki deployment on Kubernetes.
+4. Add Kustomization to prepare the Dokuwiki deployment on Kubernetes.
 
     ```bash
     vi apps/base/dokuwiki/kustomization.yaml
@@ -148,53 +102,41 @@ Workdir: apps/base/dokuwiki
 
     Add the following content to the file
 
-    ```yaml
+    ```bash
+    cat << EOF > apps/base/dokuwiki/kustomization.yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     namespace: wiki
     resources:
-    - namespace.yaml
-    - cluster-role-binding.yaml
-    - release.yaml
+       - namespace.yaml
+       - release.yaml
+    EOF 
     ```
 
-    Save file with `:wq`
-6.  Define the Dokuwiki deployment to the Kustomization for the `dev` environment.
+5. Define the Dokuwiki deployment to the Kustomization for the `dev` environment.
 
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
-    ```bash
-    vi apps/dev/kustomization.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
     Create file with this content:
 
-    ```yaml
+    ```bash
+    cat << EOF > apps/dev/kustomization.yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     namespace: wiki
     resources:
-    - ../base/dokuwiki/
+       - ../base/dokuwiki/
+    EOF 
     ```
 
-    Save file with `:wq`
-7.  Define the Dokuwiki deployment for Flux on the `dev` environment.
+6. Define the Dokuwiki deployment for Flux on the `dev` environment.
 
     The Nginx ingress controller should be deployed before the Dokuwiki, becaus it will take care of the incoming traffic. It can define via `dependsOn` option in `spec` section (see the config below).
 
-    Open file for edit:
-
-    ```bash
-    vi clusters/dev/dokuwiki.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
     Add this content to file:
 
-    ```yaml
+    ```bash
+    cat << EOF > clusters/dev/dokuwiki.yaml
     apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
     kind: Kustomization
     metadata:
@@ -210,9 +152,8 @@ Workdir: apps/base/dokuwiki
         name: flux-system
       path: ./apps/dev
       prune: true
+    EOF
     ```
-
-    Save file with `:wq`
 
 ### Deploy the code
 
@@ -233,7 +174,8 @@ You have a choice all of the kubernetes command can be apply in K9s as well. Be 
 If you have a kubectx and kubens command the next few step will be easier a bit. The original kubectl commands are also added to the documentation.
 
 1. Go to the terminal
-2.  Configure the right Kubernetes context
+
+2. Configure the right Kubernetes context
 
     ```bash
     kubectx minikube
@@ -244,7 +186,8 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
     ```bash
     kubectl config use-context minikube
     ```
-3.  Get all namespaces
+
+3. Get all namespaces
 
     ```bash
     kubectl get ns
@@ -262,69 +205,57 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
     nginx             Active   120m
     wiki              Active   100m
     ```
+
 4. Check the ingress definition is there.
-   1.  Get the existing ingress in `wiki` namespace
 
-       ```bash
-       kubectl get ingress -n wiki
-       ```
+    1. Get the existing ingress in `wiki` namespace
 
-       Sample output:
+        ```bash
+        kubectl get ingress -n wiki
+        ```
 
-       You can configure the domain in values section at the Helm release: apps/base/dokuwiki/release.yaml
+        Sample output:
 
-       ```bash
-       NAME       CLASS   HOSTS            ADDRESS        PORTS   AGE
-       dokuwiki   nginx   dokuwiki.local   192.168.1.2   80      41m
-       ```
-   2.  Add temporary entry to your /etc/hosts file:
+        You can configure the domain in values section at the Helm release: apps/base/dokuwiki/release.yaml
 
-       Open file for edit:
+        ```bash
+        NAME       CLASS   HOSTS            ADDRESS        PORTS   AGE
+        dokuwiki   nginx   dokuwiki.local   192.168.1.2   80      41m
+        ```
 
-       ```bash
-       sudo vi /etc/hosts
-       ```
+    2. Add temporary entry to your /etc/hosts file:
 
-       Enable file edit with `insert` key or `i` key
+        Open file for edit:
 
-       Add this line to the `hosts` file:\
-       Note: IP will be different on your device, so please your machine IP, that are presented in address column by the previous command.
+        ```bash
+        sudo echo "192.168.1.2 dokuwiki.local" > /etc/hosts
+        ```
 
-       ```bash
-       192.168.1.2 dokuwiki.local
-       ```
+        ```bash
+        # Dokuwiki domain
+        192.168.1.2 dokuwiki.local
+        ```
 
-       Add this content to file:
+    3. Get external URL with minikube
 
-       ```bash
-       127.0.0.1 localhost
+        ```bash
+        minikube service nginx -n nginx --url
+        ```
 
-       # Dokuwiki domain
-       192.168.1.2 dokuwiki.local
-       ```
+        Sample result:\
+        Note: IP will be different on your device, so please your machine IP, that are presented in address column by the previous command.
 
-       Save file with `:wq`
-   3.  Get external URL with minikube
+        ```bash
+        http://192.168.1.2:30308   # this is pointing to port 80 in Kubernetes
+        http://192.168.1.2:32583   # this is pointing to port 443 in Kubernetes
+        ```
 
-       ```bash
-       minikube service nginx -n nginx --url
-       ```
+        Next step to test the URL-s above with curl
 
-       Sample result:\
-       Note: IP will be different on your device, so please your machine IP, that are presented in address column by the previous command.
+        ```bash
+        curl -I http://dokuwiki.local:30308
+        ```
 
-       ```bash
-       http://192.168.1.2:30308   # this is pointing to port 80 in Kubernetes
-       http://192.168.1.2:32583   # this is pointing to port 443 in Kubernetes
-       ```
+        You will be get HTTP response code 200, that means the Dokuwiki is available and ready to use.
 
-       Next step to test the URL-s above with curl
-
-       ```bash
-       curl -I http://dokuwiki.local:30308
-       curl -I http://dokuwiki.local
-
-       You will be get HTTP response code 200, that means the Dokuwiki is available and ready to use.
-
-       Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD.
-       ```
+        Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD.
