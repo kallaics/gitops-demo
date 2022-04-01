@@ -156,7 +156,7 @@ minikube status >/dev/null
 if [ $? -eq 0 ];then
     ok_msg "(Already created)"
 else
-    minikube start --cpus 2 --memory 4096 >/dev/null 2>&1
+    minikube start --cpus 2 --memory 4096 --nodes 2 >/dev/null 2>&1
     [[ $? -eq 0 ]] && ok_msg "(minikube)" || error_msg "Minikube cluster creation error!"
 fi
 
@@ -227,8 +227,18 @@ metadata:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for namespace"
 
+echo -n "  Creating config file for 'flux-sa' service user..."
+cat << EOF > flux-init/service-account.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flux-sa
+  namespace: flux-system
+EOF
+[[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create service account for Flux"
+
 echo -n "  Creating config file for cluster role 'flux-role'..."
-cat << EOF > flux-init/role.yaml
+cat << EOF > flux-init/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -255,7 +265,7 @@ EOF
 
 
 echo -n "  Creating config file for role binding..."
-cat << EOF > flux-init/role-binding.yaml
+cat << EOF > flux-init/cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
@@ -272,56 +282,15 @@ subjects:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for role binding"
 
-# echo -n "  Creating config file for cluster role..."
-# cat << EOF > flux-init/cluster-role.yaml
-# apiVersion: rbac.authorization.k8s.io/v1
-# kind: ClusterRole
-# metadata:
-#   name: flux-cr
-# rules:
-# - apiGroups:
-#   - apiextensions.k8s.io
-#   resources:
-#   - customresourcedefinitions
-#   verbs:
-#   - list
-#   - watch
-# - apiGroups:
-#   - ""
-#   resources:
-#   - namespaces
-#   verbs:
-#   - list
-# EOF
-# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for cluster role"
-# 
-# echo -n "  Creating config file for cluster role binding..."
-# cat << EOF > flux-init/cluster-role-binding.yaml
-# apiVersion: rbac.authorization.k8s.io/v1
-# kind: ClusterRoleBinding
-# metadata:
-#   name: flux-crb
-# roleRef:
-#   apiGroup: rbac.authorization.k8s.io
-#   kind: ClusterRole
-#   name: flux-cr
-# subjects:
-# - name: flux-sa
-#   namespace: flux-system
-#   kind: ServiceAccount
-# EOF
-# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for cluster role binding"
-
 echo -n "  Creating config file for kustomization..."
 cat << EOF > flux-init/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-- role.yaml
-- role-binding.yaml
+- namespace.yaml
+- service-account.yaml
 - cluster-role.yaml
 - cluster-role-binding.yaml
-- namespace.yaml
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for kustomization"
 
@@ -452,27 +421,6 @@ metadata:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for namespace"
 
-# echo -n "  Creating config file 'cluster role binding'..."
-# cat << EOF > infrastructure/base/nginx-controller/cluster-role-binding.yaml
-# apiVersion: rbac.authorization.k8s.io/v1
-# kind: RoleBinding
-# metadata:
-#   name: flux-nginx-rb
-#   namespace: nginx
-# roleRef:
-#   apiGroup: rbac.authorization.k8s.io
-#   kind: ClusterRole
-#   name: flux-cr
-# subjects:
-# - kind: ServiceAccount
-#   name: flux-sa
-#   namespace: flux-system
-# - apiGroup: rbac.authorization.k8s.io
-#   kind: Group
-#   name: system:serviceaccounts
-# EOF
-# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'cluster role binding'"
-
 echo -n "  Creating config file for 'Helm release'..."
 cat << EOF > infrastructure/base/nginx-controller/release.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -506,9 +454,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: nginx
 resources:
-- namespace.yaml
-- cluster-role-binding.yaml
-- release.yaml
+  - namespace.yaml
+  - release.yaml
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'kustomization'"
 
@@ -536,23 +483,23 @@ git push >/dev/null 2>&1
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot push to Git"
 
 echo -n "  Get response from Nginx ingress controller (wait max. 120s)..."
-for t in $(seq 1 60)
+for t in {1..120}
 do
-  minikube service nginx -n nginx --url >/dev/null 2>&1
-  if [[ $? -eq 0 ]]; then
+  RET_VAL=$(minikube service nginx -n nginx --url)
+  if [[ ! -z "${RET_VAL}" ]]; then
     NGINX_SVC_URL=$(minikube service nginx -n nginx --url | head -n 1)
     break
   fi
-  if [[ $t -eq 60 ]]; then 
-    error_msg "NGINX service not in up state under 60s. Exiting..."
+  if [[ $t -eq 120 ]]; then 
+    error_msg "NGINX service not in up state under 120s. Exiting..."
     exit 1
   fi
-  sleep 1
+  sleep 1s
 done
 
 if [[ ! -z "${NGINX_SVC_URL}" ]]; then
   RESP=0
-  for t in $(seq 1 60)
+  for t in {1..60}
   do
   RESP=$(curl -s -o /dev/null -I -w "%{http_code}" $NGINX_SVC_URL/healthz)
   [[ "${RESP}" -eq "200" ]] && break
@@ -585,27 +532,6 @@ metadata:
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for namespace 'wiki'"
 
-# echo -n "  Creating config file 'cluster role binding'..."
-# cat << EOF > apps/base/dokuwiki/cluster-role-binding.yaml
-# apiVersion: rbac.authorization.k8s.io/v1
-# kind: RoleBinding
-# metadata:
-#   name: flux-dokuwiki-rb
-#   namespace: wiki
-# roleRef:
-#   apiGroup: rbac.authorization.k8s.io
-#   kind: ClusterRole
-#   name: flux-cr
-# subjects:
-# - kind: ServiceAccount
-#   name: flux-sa
-#   namespace: flux-system
-# - apiGroup: rbac.authorization.k8s.io
-#   kind: Group
-#   name: system:serviceaccounts
-# EOF
-# [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'cluster role binding'"
-
 echo -n "  Creating config file for 'Helm release'..."
 cat << EOF > apps/base/dokuwiki/release.yaml
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
@@ -621,7 +547,7 @@ spec:
         kind: HelmRepository
         name: bitnami
         namespace: flux-system
-  interval: 0h5m0s
+  interval: 1m
   install:
     remediation:
       retries: 3
@@ -631,6 +557,8 @@ spec:
     dokuwikiEmail: "user@example.com"
     dokuwikiFullName: "Wiki User"
     dokuwikiWikiName: "My Wiki page deployed by Flux"
+    volumePermissions:
+      enabled: true
     podSecurityPolicy:
       enabled: false
     metrics:
@@ -649,9 +577,8 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: wiki
 resources:
-- namespace.yaml
-- cluster-role-binding.yaml
-- release.yaml
+  - namespace.yaml
+  - release.yaml
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot create config file for 'kustomization'"
 
@@ -668,10 +595,10 @@ echo -n "  Add configuration to file 'kustomization'..."
 cat << EOF > apps/dev/dokuwiki/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-name: Dokuwiki-DEV
+name: dokuwiki
 namespace: wiki
 resources:
-- ../../base/dokuwiki/
+  - ../../base/dokuwiki/
 EOF
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot add configuration for file 'kustomization'"
 
@@ -713,20 +640,39 @@ git push >/dev/null 2>&1
 [[ $? -eq 0 ]] && ok_msg || error_msg "Cannot push to Git"
 
 echo -n "  Get response from DokuWiki (wait max. 120s)..."
-WIKI_SVC_PORT=$(minikube service list dokuwiki -n wiki | awk '/80/ {print $8;}' | cut -d':' -f3)
-WIKI_SVC_URL=http://dokuwiki.local:$WIKI_SVC_PORT
+for t in {1..120}
+do
+  RET_VAL=$(minikube service dokuwiki -n wiki --url)
+  if [[ ! -z "${RET_VAL}" ]]; then
+    WIKI_SVC_PORT=$(minikube service dokuwiki -n wiki --url | head -n 1 | cut -d':' -f3)
+    WIKI_SVC_URL="http://dokuwiki.local:${WIKI_SVC_PORT}"
+    break
+  fi
+  if [[ $t -eq 120 ]]; then 
+    error_msg "Dokuwiki is not in up state under 120s. Exiting..."
+    exit 1
+  fi
+  sleep 1s
+done
+
 if [[ ! -z "${WIKI_SVC_URL}" ]]; then
   RESP=0
-  for t in $(seq 1 60)
+  for t in {1..60}
   do
-  RESP=$(curl -s -o /dev/null -I -w "%{http_code}" $WIKI_SVC_URL/)
+  RESP=$(curl -s -o /dev/null -I -w "%{http_code}" $WIKI_SVC_URL)
   [[ "${RESP}" -eq "200" ]] && break
   sleep 1;
   done
   [[ "${RESP}" -eq "200" ]] && ok_msg || error_msg "No reply from $WIKI_SVC_URL"
+else
+  error_msg "Dokuwiki URL is not ready. ($WIKI_SVC_URL)"
 fi
-echo "Dokuwiki URL: ${WIKI_SVC_URL}"
-echo "Login: admin/wikiadmin"
+
+if [[ "${RESP}" -eq "200" ]]; then
+  echo
+  echo "  Dokuwiki URL: ${WIKI_SVC_URL}"
+  echo "  Login: admin/wikiadmin"
+fi
 
 popd >/dev/null 2>&1
 }
