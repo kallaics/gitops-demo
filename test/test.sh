@@ -18,23 +18,28 @@ declare -a active_functions
 declare -a removed_functions
 
 function usage() {
+  SCRIPT_NAME=$(basename $0)
   echo "--------------------------------------------------------------------------------------------------------------------"
-  echo "$0 [options]"
+  echo "$SCRIPT_NAME [options]"
   echo
   echo "Options:"
   echo "'true' will run the step, false will be skip the step. Only just one way can be forced. 'true' values are stronger"
   echo
-  echo "  -v|--verify-requirements true|false          - verification step configuration"
-  echo "  -e|--prepare-environment true|false          - environment preparation step configuration"
-  echo "  -f|--prepare-flux true|false                 - FluxCD preparation steps configuration"
-  echo "  -b|--flux-bootstrap true|false               - FluxCD bootstrap step configuration"
-  echo "  -i|--deploy-ingress-controller               - Nginx ingress controller configuration"
-  echo "  -w|--deploy-wiki                             - Wiki deployment configuration"
+  echo "  Option                          Values         Description"
+  echo "  -v|--verify-requirements        true|false   - verification step configuration"
+  echo "  -e|--prepare-environment        true|false   - environment preparation step configuration"
+  echo "  -f|--prepare-flux               true|false   - FluxCD preparation steps configuration"
+  echo "  -b|--flux-bootstrap             true|false   - FluxCD bootstrap step configuration"
+  echo "  -i|--deploy-ingress-controller  true|false   - Nginx ingress controller configuration"
+  echo "  -w|--deploy-wiki                true|false   - Wiki deployment configuration"
+  echo "  -h|--help                            -       - Get usage"
   echo
   echo "Examples:"
-  echo "Run only verification step:   $0 -v true"
-  echo "Skip verification step:       $0 -v false"
+  echo "Run only verification step:   $SCRIPT_NAME -v true"
+  echo "Skip verification step:       $SCRIPT_NAME -v false"
+  echo "Get help:                     $SCRIPT_NAME -h"
   echo "--------------------------------------------------------------------------------------------------------------------"
+  exit 0;
 }
 
 function ok_msg() {
