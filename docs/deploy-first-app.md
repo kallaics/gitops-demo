@@ -30,11 +30,11 @@ Workdir: apps/base/dokuwiki
 
 1. Create `dokuwiki` directory in apps/base
 
-```bash
-mkdir apps/base/dokuwiki
-```
+    ```bash
+    mkdir apps/base/dokuwiki
+    ```
 
-1.  Create namespace for Nginx ingress controller
+2. Create namespace for Nginx ingress controller
 
     ```bash
     vi apps/base/dokuwiki/namespace.yaml
@@ -52,7 +52,7 @@ mkdir apps/base/dokuwiki
     ```
 
     Save file with `:wq`
-2.  Create cluster role binding
+3. Create cluster role binding
 
     It gives access to Flux to deploy in this namespace.
 
@@ -84,7 +84,7 @@ mkdir apps/base/dokuwiki
     ```
 
     Save file with `:wq`
-3.  Create Dokuwiki Helm release
+4. Create Dokuwiki Helm release
 
     Helm chart guide for Dokuwiki: [https://github.com/bitnami/charts/tree/master/bitnami/dokuwiki](https://github.com/bitnami/charts/tree/master/bitnami/dokuwiki)
 
@@ -114,11 +114,18 @@ mkdir apps/base/dokuwiki
             kind: HelmRepository
             name: bitnami
             namespace: flux-system
-      interval: 0h5m0s
+      interval: 1m
       install:
         remediation:
           retries: 3
       values:
+        dokuwikiUsername: "admin"
+        dokuwikiPassword: "wikiadmin"
+        dokuwikiEmail: "user@example.com"
+        dokuwikiFullName: "Wiki User"
+        dokuwikiWikiName: "My Wiki page deployed by Flux"
+        volumePermissions:
+          enabled: true
         podSecurityPolicy:
           enabled: false
         metrics:
@@ -131,7 +138,7 @@ mkdir apps/base/dokuwiki
     ```
 
     Save file with `:wq`
-4.  Add Kustomization to prepare the Dokuwiki deployment on Kubernetes.
+5.  Add Kustomization to prepare the Dokuwiki deployment on Kubernetes.
 
     ```bash
     vi apps/base/dokuwiki/kustomization.yaml
@@ -152,7 +159,7 @@ mkdir apps/base/dokuwiki
     ```
 
     Save file with `:wq`
-5.  Define the Dokuwiki deployment to the Kustomization for the `dev` environment.
+6.  Define the Dokuwiki deployment to the Kustomization for the `dev` environment.
 
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
@@ -173,7 +180,7 @@ mkdir apps/base/dokuwiki
     ```
 
     Save file with `:wq`
-6.  Define the Dokuwiki deployment for Flux on the `dev` environment.
+7.  Define the Dokuwiki deployment for Flux on the `dev` environment.
 
     The Nginx ingress controller should be deployed before the Dokuwiki, becaus it will take care of the incoming traffic. It can define via `dependsOn` option in `spec` section (see the config below).
 

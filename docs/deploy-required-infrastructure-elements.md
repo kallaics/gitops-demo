@@ -51,7 +51,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     kind: Kustomization
     namespace: flux-system
     resources:
-    - bitnami.yaml
+       - bitnami.yaml
     EOF
     ```
 
@@ -64,7 +64,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     resources:
-    - ../base/sources/
+       - ../base/sources/
     EOF
     ```
 
@@ -75,16 +75,16 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
     kind: Kustomization
     metadata:
-    name: infrastructure
-    namespace: flux-system
+        name: infrastructure
+        namespace: flux-system
     spec:
-    timeout: 1m0s
-    interval: 5m0s
-    sourceRef:
-        kind: GitRepository
-        name: flux-system
-    path: ./infrastructure/dev
-    prune: true
+        timeout: 1m0s
+        interval: 5m0s
+        sourceRef:
+            kind: GitRepository
+            name: flux-system
+        path: ./infrastructure/dev
+        prune: true
     EOF
     ```
 
@@ -103,36 +103,11 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: v1
     kind: Namespace
     metadata:
-    name: nginx
+        name: nginx
     EOF
     ```
 
-3. Create cluster role binding
-
-    It gives access to Flux to deploy in this namespace.
-
-    ```bash
-    cat << EOF > infrastructure/base/nginx-controller/cluster-role-binding.yaml
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: RoleBinding
-    metadata:
-    name: flux-nginx-rb
-    namespace: nginx
-    roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: flux-cr
-    subjects:
-    - kind: ServiceAccount
-    name: flux-sa
-    namespace: flux-system
-    - apiGroup: rbac.authorization.k8s.io
-    kind: Group
-    name: system:serviceaccounts
-    EOF
-    ```
-
-4. Create Nginx Helm release
+3. Create Nginx Helm release
 
     Helm chart values reference: [https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml](https://github.com/bitnami/charts/blob/master/bitnami/nginx-ingress-controller/values.yaml)
 
@@ -165,7 +140,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     EOF
     ```
 
-5. Add Kustomization to prepare the Nginx controller deployment on Kubernetes.
+4. Add Kustomization to prepare the Nginx controller deployment on Kubernetes.
 
     ```bash
     cat << EOF > infrastructure/base/nginx-controller/kustomization.yaml
@@ -174,12 +149,11 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     namespace: nginx
     resources:
     - namespace.yaml
-    - cluster-role-binding.yaml
     - release.yaml
     EOF
     ```
 
-6. Add the nginx deployment to the existing Kustomization for the `dev` environment.
+5. Add the nginx deployment to the existing Kustomization for the `dev` environment.
 
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 

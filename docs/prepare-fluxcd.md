@@ -26,14 +26,28 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     EOF
     ```
 
-2. Create role configuration
+2. Create service account
 
     This role will be guaranteed the access to the Kubernetes objects.
 
     ```bash
-    cat << EOF > flux-init/role.yaml
+    cat << EOF > flux-init/cluster-role.yaml
+    apiVersion: v1
+    kind: ServiceAccount
+    metadata:
+      name: flux-engineering
+      namespace: flux-engineering
+    EOF
+    ```
+
+3. Create cluster role configuration
+
+    This role will be guaranteed the access to the Kubernetes objects.
+
+    ```bash
+    cat << EOF > flux-init/cluster-role.yaml
     apiVersion: rbac.authorization.k8s.io/v1
-    kind: Role
+    kind: ClusterRole
     metadata:
       name: flux-role
       namespace: flux-system
@@ -56,77 +70,29 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     EOF
     ```
 
-3. Create role-binding configuration
+4. Create cluster role-binding configuration
 
     This will be assign the role with the service account.
-
-    ```bash
-    cat << EOF > flux-init/role-binding.yaml
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: RoleBinding
-    metadata:
-    name: flux-sa-rb
-    namespace: flux-system
-    roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: Role
-    name: flux-role
-    subjects:
-    - name: flux-sa
-    namespace: flux-system
-    kind: ServiceAccount
-    EOF
-    ```
-
-4. Create cluster role configuration
-
-    This role will describe the right to the cluster.
-
-    ```bash
-    cat << EOF > flux-init/cluster-role.yaml
-    apiVersion: rbac.authorization.k8s.io/v1
-    kind: ClusterRole
-    metadata:
-    name: flux-cr
-    rules:
-    - apiGroups:
-    - apiextensions.k8s.io
-    resources:
-    - customresourcedefinitions
-    verbs:
-    - list
-    - watch
-    - apiGroups:
-    - ""
-    resources:
-    - namespaces
-    verbs:
-    - list
-    EOF
-    ```
-
-5. Create cluster role binding configuration
-
-    This will assign the cluster role with the service account.
 
     ```bash
     cat << EOF > flux-init/cluster-role-binding.yaml
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
-    name: flux-crb
+      name: flux-sa-rb
+      namespace: flux-system
     roleRef:
-    apiGroup: rbac.authorization.k8s.io
-    kind: ClusterRole
-    name: flux-cr
+      apiGroup: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: flux-role
     subjects:
     - name: flux-sa
-    namespace: flux-system
-    kind: ServiceAccount
+      namespace: flux-system
+      kind: ServiceAccount
     EOF
     ```
 
-6. Create kustomization configuration
+5. Create kustomization configuration
 
     This will call the previous configuration in the defined order and apply it.
 
@@ -143,7 +109,7 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     EOF
     ```
 
-7. Verify your files are correct and ready to deploy them
+6. Verify your files are correct and ready to deploy them
 
     ```bash
     kubectl apply -k flux-init/ --dry-run=client
@@ -159,14 +125,14 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     clusterrolebinding.rbac.authorization.k8s.io/flux-crb configured (dry run)
     ```
 
-8. Change all stages for git commit
+7. Change all stages for git commit
 
     ```bash
     git add.
     git commit -m "Init FluxCD environment"
     ```
 
-9. Push your code to the GitHub
+8. Push your code to the GitHub
 
     ```bash
     git push -u origin demo1
