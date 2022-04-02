@@ -31,7 +31,7 @@ The repository and the user only enough for this token.
 1. Run `minikube` command
 
     ```bash
-    minikube start -cpus 2 --memory 4096
+    minikube start --cpus 2 --memory 4096
     ```
 
     Sample output:
