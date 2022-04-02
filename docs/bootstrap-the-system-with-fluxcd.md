@@ -7,10 +7,17 @@ After we created the necessary objects for FluxCD, than here is the time to init
 1. Deploy the FluxCD requirements on Kubernetes
 
     ```bash
-    kubectl apply -k flux-init/
+    kubectl create -k flux-init/
     ```
 
-2. Bootstrap the FluxCD
+2. If you have multiple Kubernetes context please choose the minikube system.
+
+    ```bash
+    kubectx minikube
+    kubens default
+    ```
+
+3. Bootstrap the FluxCD
 
     Create a connection between the FluxCD and the Git repository via SSH. If you are using GitHub, Gitlab or Bitbucket please see the [FluxCD documentation bootstrap section](https://fluxcd.io/docs/cmd/flux\_bootstrap/) about the possibilities.
 
@@ -74,11 +81,21 @@ After we created the necessary objects for FluxCD, than here is the time to init
     ✔ all components are healthy
     ```
 
-3. We have a base FluxCD installation on Kubernetes.
+4. We have a base FluxCD installation on Kubernetes.
 
     You can able to check it with k9s (the k9s documentation are linked above) or you can check it manually
 
     ```bash
     kubens flux-system
     kubectl get pods
+    ```
+
+    Sample results for the pods. When all the status is running looks fine this step.
+
+    ```bash
+    NAME                                      READY   STATUS    RESTARTS   AGE
+    helm-controller-dfb4b5478-82qd2           1/1     Running   0          2m24s
+    kustomize-controller-cd544c8f8-6q2z6      1/1     Running   0          2m24s
+    notification-controller-d9cc9bf46-hrpbv   1/1     Running   0          2m24s
+    source-controller-84bfd77bf8-qt4s6        1/1     Running   0          2m24s
     ```
