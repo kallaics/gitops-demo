@@ -137,8 +137,8 @@ Workdir: apps/base/dokuwiki
     spec:
       dependsOn:
         - name: infrastructure
-      timeout: 1m0s
-      interval: 5m0s
+      timeout: 2m
+      interval: 3m
       sourceRef:
         kind: GitRepository
         name: flux-system
