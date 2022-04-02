@@ -68,7 +68,7 @@ Workdir: apps/base/dokuwiki
             kind: HelmRepository
             name: bitnami
             namespace: flux-system
-      interval: 1m
+      interval: 5m
       install:
         remediation:
           retries: 3
@@ -137,8 +137,8 @@ Workdir: apps/base/dokuwiki
     spec:
       dependsOn:
         - name: infrastructure
-      timeout: 2m
-      interval: 3m
+      timeout: 1m
+      interval: 2m
       sourceRef:
         kind: GitRepository
         name: flux-system
