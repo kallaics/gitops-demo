@@ -51,7 +51,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     kind: Kustomization
     namespace: flux-system
     resources:
-       - bitnami.yaml
+      - bitnami.yaml
     EOF
     ```
 
@@ -64,7 +64,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     resources:
-       - ../base/sources/
+      - ../base/sources/
     EOF
     ```
 
@@ -75,16 +75,16 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: kustomize.toolkit.fluxcd.io/v1beta2
     kind: Kustomization
     metadata:
-        name: infrastructure
-        namespace: flux-system
+      name: infrastructure
+      namespace: flux-system
     spec:
-        timeout: 30s
-        interval: 1m
-        sourceRef:
-            kind: GitRepository
-            name: flux-system
-        path: ./infrastructure/dev
-        prune: true
+      timeout: 30s
+      interval: 1m
+      sourceRef:
+        kind: GitRepository
+        name: flux-system
+      path: ./infrastructure/dev
+      prune: true
     EOF
     ```
 
@@ -103,7 +103,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: v1
     kind: Namespace
     metadata:
-        name: nginx
+      name: nginx
     EOF
     ```
 
@@ -118,25 +118,25 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: helm.toolkit.fluxcd.io/v2beta1
     kind: HelmRelease
     metadata:
-    name: nginx
+      name: nginx
     spec:
-    releaseName: nginx-ingress-controller
-    chart:
+      releaseName: nginx-ingress-controller
+      chart:
         spec:
-        chart: nginx-ingress-controller
-        sourceRef:
+          chart: nginx-ingress-controller
+          sourceRef:
             kind: HelmRepository
             name: bitnami
             namespace: flux-system
-    interval: 1m
-    install:
+      interval: 5m
+      install:
         remediation:
-        retries: 3
-    values:
+          retries: 3
+      values:
         nameOverride: "nginx"
         fullnameOverride: "nginx"
         podSecurityPolicy:
-        enabled: false
+          enabled: false
     EOF
     ```
 
@@ -148,8 +148,8 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     kind: Kustomization
     namespace: nginx
     resources:
-    - namespace.yaml
-    - release.yaml
+      - namespace.yaml
+      - release.yaml
     EOF
     ```
 
@@ -256,11 +256,11 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
        http://192.168.1.2:32583   # this is pointing to port 443 in Kubernetes
        ```
 
-       Next step to test the URL-s above with curl
+       Next step to test the URL-s above with curl. The command will get back just the HTTP response number like "200" or "404".
 
        ```bash
-       curl http://192.168.1.2:30308
-       curl http://192.168.1.2:30583
+       curl -s -o /dev/null -I -w "%{http_code}" http://192.168.1.2:30308/healthz
+       curl -s -o /dev/null -I -w "%{http_code}"http://192.168.1.2:30583/healthz
        ```
 
        You will be get HTTP error 404, that means our nginx ingress controller is working well, but no ingresses configured yet.

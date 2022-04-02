@@ -102,7 +102,7 @@ Workdir: apps/base/dokuwiki
     resources:
        - namespace.yaml
        - release.yaml
-    EOF 
+    EOF
     ```
 
 5. Define the Dokuwiki deployment to the Kustomization for the `dev` environment.
@@ -118,7 +118,7 @@ Workdir: apps/base/dokuwiki
     namespace: wiki
     resources:
       - ../base/dokuwiki/
-    EOF 
+    EOF
     ```
 
 6. Define the Dokuwiki deployment for Flux on the `dev` environment.
@@ -152,6 +152,7 @@ Workdir: apps/base/dokuwiki
 In this case just commit all files and push it into the Git repository
 
 ```bash
+git pull
 git add .
 git commit -m "Added Dokuwiki deployment"
 git push
@@ -200,35 +201,24 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
 
 4. Check the ingress definition is there.
 
-    1. Get the existing ingress in `wiki` namespace
+    Get the existing ingress in `wiki` namespace
 
-        ```bash
-        kubectl get ingress -n wiki
-        ```
+    ```bash
+    kubectl get ingress -n wiki
+    ```
 
-        Sample output:
+    Sample output:
 
-        You can configure the domain in values section at the Helm release: apps/base/dokuwiki/release.yaml
+    You can configure the domain in values section at the Helm release: apps/base/dokuwiki/release.yaml
 
-        ```bash
-        NAME       CLASS   HOSTS            ADDRESS        PORTS   AGE
-        dokuwiki   nginx   dokuwiki.local   192.168.1.2   80      41m
-        ```
+    ```bash
+    NAME       CLASS   HOSTS            ADDRESS       PORTS   AGE
+    dokuwiki   nginx   dokuwiki.local   192.168.1.3   80      41m
+    ```
 
-    2. Add temporary entry to your /etc/hosts file:
+5. Verify our wiki page is available
 
-        Open file for edit:
-
-        ```bash
-        sudo echo "192.168.1.2 dokuwiki.local" > /etc/hosts
-        ```
-
-        ```bash
-        # Dokuwiki domain
-        192.168.1.2 dokuwiki.local
-        ```
-
-    3. Get external URL with minikube
+    1. Get external URL with minikube
 
         ```bash
         minikube service nginx -n nginx --url
@@ -242,12 +232,26 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
         http://192.168.1.2:32583   # this is pointing to port 443 in Kubernetes
         ```
 
-        Next step to test the URL-s above with curl
+    2. Add temporary entry to your /etc/hosts file:
+
+        Open file for edit:
 
         ```bash
-        curl -I http://dokuwiki.local:30308
+        sudo -- bash -c 'echo "192.168.1.2 dokuwiki.local" >> /etc/hosts'
         ```
 
-        You will be get HTTP response code 200, that means the Dokuwiki is available and ready to use.
+        ```bash
+        # Dokuwiki domain
+        192.168.1.2 dokuwiki.local
+        ```
+
+    3. Next step to test the URL-s above with curl
+
+        ```bash
+        curl -s -o /dev/null -I -w "%{http_code}" http://dokuwiki.local:30308
+        ```
+
+        You will be get HTTP response code 200, that means the Dokuwiki is available and ready to use.  
+        At this point the url is available via browser as well. Check the result please.
 
         Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD.

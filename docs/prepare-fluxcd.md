@@ -111,7 +111,7 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
 6. Verify your files are correct and ready to deploy them
 
     ```bash
-    kubectl apply -k flux-init/ --dry-run=client
+    kubectl create -k flux-init/ --dry-run=client
     ```
 
     Sample output:
@@ -127,12 +127,13 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
 7. Change all stages for git commit
 
     ```bash
-    git add.
+    git add .
     git commit -m "Init FluxCD environment"
     ```
 
 8. Push your code to the GitHub
 
     ```bash
-    git push -u origin demo1
+    git branch --set-upstream-to=origin/demo1 demo1
+    git push
     ```
