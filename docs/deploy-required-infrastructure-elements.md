@@ -78,8 +78,8 @@ Nginx ingress controller is an infrastructure related element and it will be ser
       name: infrastructure
       namespace: flux-system
     spec:
-      timeout: 30s
-      interval: 1m
+      timeout: 1m
+      interval: 2m
       sourceRef:
         kind: GitRepository
         name: flux-system
