@@ -95,14 +95,6 @@ Workdir: apps/base/dokuwiki
 4. Add Kustomization to prepare the Dokuwiki deployment on Kubernetes.
 
     ```bash
-    vi apps/base/dokuwiki/kustomization.yaml
-    ```
-
-    Enable file edit with `insert` key or `i` key
-
-    Add the following content to the file
-
-    ```bash
     cat << EOF > apps/base/dokuwiki/kustomization.yaml
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
@@ -125,7 +117,7 @@ Workdir: apps/base/dokuwiki
     kind: Kustomization
     namespace: wiki
     resources:
-       - ../base/dokuwiki/
+      - ../base/dokuwiki/
     EOF 
     ```
 

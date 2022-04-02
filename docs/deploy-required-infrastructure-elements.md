@@ -78,8 +78,8 @@ Nginx ingress controller is an infrastructure related element and it will be ser
         name: infrastructure
         namespace: flux-system
     spec:
-        timeout: 1m0s
-        interval: 5m0s
+        timeout: 30s
+        interval: 1m
         sourceRef:
             kind: GitRepository
             name: flux-system
@@ -128,7 +128,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
             kind: HelmRepository
             name: bitnami
             namespace: flux-system
-    interval: 0h5m0s
+    interval: 1m
     install:
         remediation:
         retries: 3
@@ -158,7 +158,7 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     If you will to add more sources later, just define same way as above and add the file to tle list in kustomization.yaml
 
     ```bash
-    echo "- ../base/nginx-controller/" >> infrastructure/dev/kustomization.yaml
+    echo "  - ../base/nginx-controller/" >> infrastructure/dev/kustomization.yaml
     ```
 
     The result looks this:
@@ -167,8 +167,8 @@ Nginx ingress controller is an infrastructure related element and it will be ser
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     resources:
-    - ../base/sources/
-    - ../base/nginx-controller/
+      - ../base/sources/
+      - ../base/nginx-controller/
     ```
 
 ### Deploy the configuration

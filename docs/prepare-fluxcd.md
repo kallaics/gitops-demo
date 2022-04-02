@@ -28,15 +28,15 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
 
 2. Create service account
 
-    This role will be guaranteed the access to the Kubernetes objects.
+    This service account will be used for Flux to access to the Kubernetes objects.
 
     ```bash
-    cat << EOF > flux-init/cluster-role.yaml
+    cat << EOF > flux-init/service-account.yaml
     apiVersion: v1
     kind: ServiceAccount
     metadata:
-      name: flux-engineering
-      namespace: flux-engineering
+      name: flux
+      namespace: flux-system
     EOF
     ```
 
@@ -49,7 +49,7 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRole
     metadata:
-      name: flux-role
+      name: flux
       namespace: flux-system
     rules:
     - apiGroups: ["apiextensions.k8s.io"]
@@ -79,14 +79,14 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     apiVersion: rbac.authorization.k8s.io/v1
     kind: ClusterRoleBinding
     metadata:
-      name: flux-sa-rb
+      name: flux
       namespace: flux-system
     roleRef:
       apiGroup: rbac.authorization.k8s.io
       kind: ClusterRole
-      name: flux-role
+      name: flux
     subjects:
-    - name: flux-sa
+    - name: flux
       namespace: flux-system
       kind: ServiceAccount
     EOF
@@ -101,11 +101,10 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     resources:
-    - role.yaml
-    - role-binding.yaml
+    - namespace.yaml
+    - service-account.yaml
     - cluster-role.yaml
     - cluster-role-binding.yaml
-    - namespace.yaml
     EOF
     ```
 
