@@ -101,10 +101,10 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
     apiVersion: kustomize.config.k8s.io/v1beta1
     kind: Kustomization
     resources:
-    - namespace.yaml
-    - service-account.yaml
-    - cluster-role.yaml
-    - cluster-role-binding.yaml
+      - namespace.yaml
+      - service-account.yaml
+      - cluster-role.yaml
+      - cluster-role-binding.yaml
     EOF
     ```
 
@@ -134,6 +134,5 @@ We are creating the Flux deployment for Kubernetes. These steps are presenting h
 8. Push your code to the GitHub
 
     ```bash
-    git branch --set-upstream-to=origin/demo1 demo1
-    git push
+    git push --set-upstream origin demo1
     ```
