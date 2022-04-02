@@ -263,6 +263,6 @@ If you have a kubectx and kubens command the next few step will be easier a bit.
        curl -s -o /dev/null -I -w "%{http_code}"http://192.168.1.2:30583/healthz
        ```
 
-       You will be get HTTP error 404, that means our nginx ingress controller is working well, but no ingresses configured yet.
+       First request will give HTTP 200 and the second will return HTTP error 400, that means our nginx ingress controller is working well, but no ingresses configured yet.
 
        Note: The ports at end of the URL will be changes anytime, if Nginx ingress controller will be redeployed by FluxCD .
